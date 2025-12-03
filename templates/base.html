@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Tienda PoS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <nav class="sidebar">
+        <div class="brand">
+            <i class='bx bxs-store'></i>
+            Mi Tienda
+        </div>
+        <ul class="nav-links">
+            <li><a href="/" class="{{ 'active' if request.path == '/' else '' }}">
+                    <i class='bx bxs-dashboard'></i> Inicio
+                </a></li>
+            <li><a href="/pos" class="{{ 'active' if request.path == '/pos' else '' }}">
+                    <i class='bx bxs-cart-alt'></i> Punto de Venta
+                </a></li>
+            <li><a href="/inventory" class="{{ 'active' if request.path == '/inventory' else '' }}">
+                    <i class='bx bxs-box'></i> Inventario
+                </a></li>
+            <li><a href="/categories" class="{{ 'active' if request.path == '/categories' else '' }}">
+                    <i class='bx bxs-category'></i> Categorías
+                </a></li>
+            <li><a href="/sales" class="{{ 'active' if request.path == '/sales' else '' }}">
+                    <i class='bx bxs-report'></i> Historial
+                </a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header>
+            <h1>{% block title %}Inicio{% endblock %}</h1>
+            <div class="user-profile">
+                <i class='bx bxs-user-circle' style="font-size: 1.2rem;"></i>
+                <span>Administrador</span>
+            </div>
+        </header>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

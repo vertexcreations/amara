@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Categorías{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="flex justify-between items-center mb-2">
+        <h2>Categorías</h2>
+        <button onclick="openModal()" class="btn btn-primary">+ Agregar Categoría</button>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="categoryTableBody">
+            <!-- Populated by JS -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Category Modal -->
+<div id="addCategoryModal" class="modal">
+    <div class="modal-content">
+        <h2>Agregar Nueva Categoría</h2>
+        <form id="addCategoryForm" class="mt-2">
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" name="name" required placeholder="Ej. Jeans, Vestidos...">
+            </div>
+            <div class="flex justify-between mt-2">
+                <button type="button" onclick="closeModal()" class="btn btn-secondary">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const modal = document.getElementById('addCategoryModal');
+    const tableBody = document.getElementById('categoryTableBody');
+
+    function openModal() { modal.classList.add('active'); }
+    function closeModal() { modal.classList.remove('active'); }
+
+    async function loadCategories() {
+        const categories = await api.getCategories();
+        tableBody.innerHTML = categories.map(c => `
+            <tr>
+                <td>${c.id}</td>
+                <td>${c.name}</td>
+                <td>
+                    <button onclick="deleteCategory(${c.id})" class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Eliminar</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    document.getElementById('addCategoryForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const category = Object.fromEntries(formData.entries());
+
+        try {
+            await api.addCategory(category);
+            closeModal();
+            e.target.reset();
+            loadCategories();
+        } catch (err) {
+            alert('Error al agregar categoría');
+        }
+    };
+
+    async function deleteCategory(id) {
+        if (confirm('¿Estás seguro?')) {
+            await api.deleteCategory(id);
+            loadCategories();
+        }
+    }
+
+    loadCategories();
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Ventas{% endblock %}
+
+{% block content %}
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Artículos</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody id="salesTableBody">
+            <!-- Populated by JS -->
+        </tbody>
+    </table>
+</div>
+
+{% block scripts %}
+<script>
+    async function loadSales() {
+        const sales = await api.getSales();
+        const tbody = document.getElementById('salesTableBody');
+
+        tbody.innerHTML = sales.map(sale => {
+            const date = new Date(sale.timestamp).toLocaleString();
+            const itemsSummary = sale.items.map(i => `${i.quantity}x ${i.product_name}`).join(', ');
+
+            return `
+                <tr>
+                    <td>#${sale.id}</td>
+                    <td>${date}</td>
+                    <td>${itemsSummary}</td>
+                    <td>${formatCurrency(sale.total_amount)}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    loadSales();
+</script>
+{% endblock %}
+{% endblock %}

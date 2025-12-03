@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Punto de Venta{% endblock %}
+
+{% block content %}
+<div class="pos-layout">
+    <!-- Product Selection -->
+    <div class="product-grid">
+        <div class="form-group">
+            <input type="text" id="searchBox" placeholder="Buscar productos por nombre o SKU..."
+                onkeyup="filterProducts()">
+        </div>
+        <div id="productsContainer" class="grid-container">
+            <!-- Products injected here -->
+        </div>
+    </div>
+
+    <!-- Cart -->
+    <div class="cart-panel">
+        <h2>Venta Actual</h2>
+        <div class="cart-items" id="cartItems">
+            <!-- Cart items injected here -->
+            <div class="text-center text-secondary mt-2">El carrito está vacío</div>
+        </div>
+        <div class="cart-total">
+            Total: <span id="cartTotal">$0.00</span>
+        </div>
+        <button onclick="processCheckout()" class="btn btn-primary mt-2" style="width: 100%">Pagar</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let allProducts = [];
+    let cart = [];
+
+    async function init() {
+        allProducts = await api.getProducts();
+        renderProducts(allProducts);
+    }
+
+    function renderProducts(products) {
+        const container = document.getElementById('productsContainer');
+        container.innerHTML = products.map(p => `
+            <div class="card" onclick="addToCart(${p.id})" style="cursor: pointer; transition: transform 0.2s;">
+                <h4>${p.name}</h4>
+                <p class="text-secondary">${p.sku}</p>
+                <div class="flex justify-between mt-2">
+                    <span>${p.size || ''} ${p.color || ''}</span>
+                    <span style="font-weight: bold; color: var(--primary-color)">${formatCurrency(p.price)}</span>
+                </div>
+                <small>Stock: ${p.stock_quantity}</small>
+            </div>
+        `).join('');
+    }
+
+    function filterProducts() {
+        const query = document.getElementById('searchBox').value.toLowerCase();
+        const filtered = allProducts.filter(p =>
+            p.name.toLowerCase().includes(query) ||
+            p.sku.toLowerCase().includes(query)
+        );
+        renderProducts(filtered);
+    }
+
+    function addToCart(productId) {
+        const product = allProducts.find(p => p.id === productId);
+        if (product.stock_quantity <= 0) {
+            alert('¡Sin stock!');
+            return;
+        }
+
+        const existing = cart.find(item => item.id === productId);
+        if (existing) {
+            if (existing.quantity >= product.stock_quantity) {
+                alert('¡No hay suficiente stock!');
+                return;
+            }
+            existing.quantity++;
+        } else {
+            cart.push({ ...product, quantity: 1 });
+        }
+        renderCart();
+    }
+
+    function removeFromCart(productId) {
+        cart = cart.filter(item => item.id !== productId);
+        renderCart();
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cartItems');
+        if (cart.length === 0) {
+            container.innerHTML = '<div class="text-center text-secondary mt-2">El carrito está vacío</div>';
+            document.getElementById('cartTotal').innerText = '$0.00';
+            return;
+        }
+
+        let total = 0;
+        container.innerHTML = cart.map(item => {
+            total += item.price * item.quantity;
+            return `
+                <div class="cart-item">
+                    <div>
+                        <strong>${item.name}</strong><br>
+                        <small>${item.quantity} x ${formatCurrency(item.price)}</small>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" class="btn btn-danger" style="padding: 0.25rem 0.5rem;">&times;</button>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('cartTotal').innerText = formatCurrency(total);
+    }
+
+    async function processCheckout() {
+        if (cart.length === 0) return;
+
+        try {
+            await api.checkout(cart.map(item => ({ id: item.id, quantity: item.quantity })));
+            alert('¡Venta completada con éxito!');
+            cart = [];
+            renderCart();
+            init(); // Reload products to update stock
+        } catch (err) {
+            alert('Error en el pago: ' + err.message);
+        }
+    }
+
+    init();
+</script>
+{% endblock %}

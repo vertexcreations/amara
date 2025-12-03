@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<div class="grid-container">
+    <div class="card">
+        <h3>Ventas de Hoy</h3>
+        <p class="mt-2" style="font-size: 2rem; color: var(--secondary-color);">$0.00</p>
+        <small class="text-secondary">Sin datos aún</small>
+    </div>
+    <div class="card">
+        <h3>Artículos Vendidos</h3>
+        <p class="mt-2" style="font-size: 2rem; color: var(--primary-color)">0</p>
+    </div>
+    <div class="card">
+        <h3>Stock Bajo</h3>
+        <p class="mt-2" style="font-size: 2rem; color: var(--error-color)">0</p>
+    </div>
+</div>
+
+<div class="card mt-2">
+    <h3>Acciones Rápidas</h3>
+    <div class="flex mt-2">
+        <a href="/pos" class="btn btn-primary">Nueva Venta</a>
+        <a href="/inventory" class="btn btn-secondary">Gestionar Inventario</a>
+    </div>
+</div>
+{% endblock %}
