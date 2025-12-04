@@ -6,16 +6,16 @@
 <div class="grid-container">
     <div class="card">
         <h3>Ventas de Hoy</h3>
-        <p class="mt-2" style="font-size: 2rem; color: var(--secondary-color);">$0.00</p>
-        <small class="text-secondary">Sin datos aún</small>
+        <p id="today-sales" class="mt-2" style="font-size: 2rem; color: var(--secondary-color);">$0.00</p>
+        <small class="text-secondary">Actualizado hoy</small>
     </div>
     <div class="card">
         <h3>Artículos Vendidos</h3>
-        <p class="mt-2" style="font-size: 2rem; color: var(--primary-color)">0</p>
+        <p id="items-sold" class="mt-2" style="font-size: 2rem; color: var(--primary-color)">0</p>
     </div>
     <div class="card">
         <h3>Stock Bajo</h3>
-        <p class="mt-2" style="font-size: 2rem; color: var(--error-color)">0</p>
+        <p id="low-stock" class="mt-2" style="font-size: 2rem; color: var(--error-color)">0</p>
     </div>
 </div>
 
@@ -26,4 +26,19 @@
         <a href="/inventory" class="btn btn-secondary">Gestionar Inventario</a>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const stats = await api.getDashboardStats();
+            document.getElementById('today-sales').textContent = formatCurrency(stats.today_sales);
+            document.getElementById('items-sold').textContent = stats.items_sold;
+            document.getElementById('low-stock').textContent = stats.low_stock;
+        } catch (error) {
+            console.error('Error loading dashboard stats:', error);
+        }
+    });
+</script>
 {% endblock %}

@@ -50,5 +50,9 @@ const api = {
     },
     deleteCategory: async (id) => {
         await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+    },
+    getDashboardStats: async () => {
+        const res = await fetch('/api/dashboard-stats');
+        return await res.json();
     }
 };

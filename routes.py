@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from models import db, Product, Sale, SaleItem, Category
+from sqlalchemy import func
+from datetime import datetime, date
 
 main = Blueprint('main', __name__)
 
@@ -143,3 +145,26 @@ def checkout():
 def get_sales():
     sales = Sale.query.order_by(Sale.timestamp.desc()).all()
     return jsonify([s.to_dict() for s in sales])
+
+@main.route('/api/dashboard-stats')
+def dashboard_stats():
+    # Use current date for filtering
+    today = datetime.now().date()
+    
+    # Total sales today
+    total_sales = db.session.query(func.sum(Sale.total_amount))\
+        .filter(func.date(Sale.timestamp) == today).scalar() or 0.0
+        
+    # Items sold today
+    items_sold = db.session.query(func.sum(SaleItem.quantity))\
+        .join(Sale)\
+        .filter(func.date(Sale.timestamp) == today).scalar() or 0
+        
+    # Low stock products (less than 5)
+    low_stock = Product.query.filter(Product.stock_quantity < 5).count()
+    
+    return jsonify({
+        'today_sales': total_sales,
+        'items_sold': items_sold,
+        'low_stock': low_stock
+    })
