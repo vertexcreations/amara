@@ -3,44 +3,89 @@
 {% block title %}Historial de Ventas{% endblock %}
 
 {% block content %}
-<div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Fecha</th>
-                <th>Artículos</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody id="salesTableBody">
-            <!-- Populated by JS -->
-        </tbody>
-    </table>
+<div id="salesContainer">
+    <!-- Populated by JS -->
 </div>
+{% endblock %}
 
 {% block scripts %}
 <script>
     async function loadSales() {
         const sales = await api.getSales();
-        const tbody = document.getElementById('salesTableBody');
+        const container = document.getElementById('salesContainer');
 
-        tbody.innerHTML = sales.map(sale => {
-            const date = new Date(sale.timestamp).toLocaleString();
-            const itemsSummary = sale.items.map(i => `${i.quantity}x ${i.product_name}`).join(', ');
+        // Group by date
+        const groups = {};
+        sales.forEach(sale => {
+            const dateObj = new Date(sale.timestamp);
+            const dateKey = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+
+            if (!groups[dateKey]) {
+                groups[dateKey] = {
+                    dateObj: dateObj,
+                    sales: [],
+                    total: 0
+                };
+            }
+            groups[dateKey].sales.push(sale);
+            groups[dateKey].total += sale.total_amount;
+        });
+
+        // Sort dates descending (newest first)
+        const sortedKeys = Object.keys(groups).sort().reverse();
+
+        if (sortedKeys.length === 0) {
+            container.innerHTML = '<div class="card"><p class="text-center text-secondary">No hay ventas registradas.</p></div>';
+            return;
+        }
+
+        container.innerHTML = sortedKeys.map(key => {
+            const group = groups[key];
+            // Format date: "Lunes, 9 de diciembre de 2025"
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            let dateStr = group.dateObj.toLocaleDateString('es-BO', dateOptions);
+            dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+
+            const salesRows = group.sales.map(sale => {
+                const timeStr = new Date(sale.timestamp).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
+                const itemsSummary = sale.items.map(i => `${i.quantity}x ${i.product_name}`).join(', ');
+
+                return `
+                    <tr>
+                        <td style="white-space: nowrap; color: var(--text-secondary);">${timeStr}</td>
+                        <td>#${sale.id}</td>
+                        <td>${itemsSummary}</td>
+                        <td class="text-right font-medium">${formatCurrency(sale.total_amount)}</td>
+                    </tr>
+                `;
+            }).join('');
 
             return `
-                <tr>
-                    <td>#${sale.id}</td>
-                    <td>${date}</td>
-                    <td>${itemsSummary}</td>
-                    <td>${formatCurrency(sale.total_amount)}</td>
-                </tr>
+                <div class="card">
+                    <div class="flex justify-between items-center mb-3 pb-2 border-bottom" style="border-bottom: 1px solid var(--border-color);">
+                        <h3 style="font-size: 1.25rem; color: var(--text-primary); margin: 0;">${dateStr}</h3>
+                        <span style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color);">
+                            Total: ${formatCurrency(group.total)}
+                        </span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>ID</th>
+                                <th>Artículos</th>
+                                <th class="text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${salesRows}
+                        </tbody>
+                    </table>
+                </div>
             `;
         }).join('');
     }
 
     loadSales();
 </script>
-{% endblock %}
 {% endblock %}
