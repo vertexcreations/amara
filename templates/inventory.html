@@ -4,6 +4,23 @@
 
 {% block content %}
 <div class="card">
+    <style>
+        .filter-input {
+            width: 100%;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: normal;
+            margin-top: 0.25rem;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+    </style>
     <div class="flex justify-between items-center mb-2">
         <h2>Productos</h2>
         <button onclick="openModal()" class="btn btn-primary">+ Agregar Producto</button>
@@ -19,6 +36,16 @@
                 <th>Precio</th>
                 <th>Stock</th>
                 <th>Acciones</th>
+            </tr>
+            <tr id="filterRow">
+                <th><input type="text" onkeyup="applyFilters()" placeholder="SKU" class="filter-input"></th>
+                <th><input type="text" onkeyup="applyFilters()" placeholder="Nombre" class="filter-input"></th>
+                <th><input type="text" onkeyup="applyFilters()" placeholder="Cat" class="filter-input"></th>
+                <th><input type="text" onkeyup="applyFilters()" placeholder="Talla" class="filter-input"></th>
+                <th><input type="text" onkeyup="applyFilters()" placeholder="Color" class="filter-input"></th>
+                <th><input type="text" onkeyup="applyFilters()" placeholder="Precio" class="filter-input"></th>
+                <th><input type="text" onkeyup="applyFilters()" placeholder="Stock" class="filter-input"></th>
+                <th></th>
             </tr>
         </thead>
         <tbody id="productTableBody">
@@ -139,6 +166,29 @@
         if (confirm('¿Estás seguro?')) {
             await api.deleteProduct(id);
             loadData();
+        }
+    }
+
+    function applyFilters() {
+        const inputs = document.querySelectorAll('#filterRow input');
+        const rows = document.getElementById('productTableBody').getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            let show = true;
+            for (let j = 0; j < inputs.length; j++) {
+                const filterText = inputs[j].value.toLowerCase();
+                if (filterText) {
+                    const cell = rows[i].getElementsByTagName('td')[j];
+                    if (cell) {
+                        const cellText = (cell.textContent || cell.innerText).toLowerCase();
+                        if (cellText.indexOf(filterText) === -1) {
+                            show = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            rows[i].style.display = show ? "" : "none";
         }
     }
 
