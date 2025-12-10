@@ -1,0 +1,31 @@
+CREAR APLICACIÓN DE ESCRITORIO (.EXE)
+=====================================
+
+Has elegido la opción profesional. Esta herramienta convertirá tu sistema web
+en un programa de Windows (.exe) que parece una aplicación nativa.
+
+VENTAJAS
+--------
+1. No necesita navegador (se abre en su propia ventana).
+2. No muestra la consola negra fea.
+3. Es un solo archivo fácil de compartir.
+4. La base de datos se guardará junto al archivo .exe automáticamente.
+
+PASOS PARA CREARLO
+------------------
+1. Haz doble clic en el archivo "crear_ejecutable.bat".
+2. Espera pacientemente. La primera vez puede tardar unos minutos.
+3. Cuando termine, verás una nueva carpeta llamada "dist".
+4. Dentro de "dist" encontrarás "MiTiendaPoS.exe".
+
+CÓMO DISTRIBUIR
+---------------
+Solo necesitas copiar ese archivo "MiTiendaPoS.exe" a la computadora de la otra persona.
+¡No necesitan instalar Python ni nada más! Solo doble clic y listo.
+
+NOTA IMPORTANTE SOBRE ANTIVIRUS
+-------------------------------
+A veces, los antivirus (como Windows Defender) pueden sospechar de los archivos .exe
+creados caseramente porque no tienen una "firma digital" de una empresa grande.
+Si te aparece una advertencia, simplemente dale a "Más información" -> "Ejecutar de todas formas".
+Es completamente seguro.

@@ -1,0 +1,27 @@
+GUÍA DE INSTALACIÓN Y USO - MI TIENDA POS
+===========================================
+
+¡Hola! Sigue estos sencillos pasos para usar el sistema en tu computadora.
+
+REQUISITOS PREVIOS
+------------------
+Solo necesitas tener instalado "Python".
+1. Si no lo tienes, descárgalo gratis aquí: https://www.python.org/downloads/
+2. Al instalarlo, asegúrate de marcar la casilla que dice "Add Python to PATH" (esto es muy importante).
+
+CÓMO INICIAR EL SISTEMA
+-----------------------
+1. En esta carpeta, verás un archivo llamado "iniciar_sistema.bat" (puede que solo veas "iniciar_sistema").
+2. Haz doble clic sobre él.
+3. Se abrirá una ventana negra (consola) que preparará todo automáticamente.
+   - La primera vez puede tardar unos minutos instalando cosas.
+4. El sistema abrirá automáticamente tu navegador web (Chrome, Edge, etc.) listo para usar.
+
+IMPORTANTE
+----------
+- NO cierres la ventana negra mientras estés usando el sistema. Si la cierras, el sistema se apagará.
+- Para apagar el sistema, simplemente cierra la ventana negra.
+
+SOPORTE
+-------
+Si tienes problemas, contacta a tu administrador de sistemas.
