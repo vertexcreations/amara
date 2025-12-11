@@ -117,3 +117,7 @@ Si deseas distribuir la aplicación como un archivo ejecutable único (sin neces
 *   **Backend**: Python, Flask, SQLAlchemy.
 *   **Frontend**: HTML5, CSS3 (Vanilla), JavaScript.
 *   **Base de Datos**: SQLite.
+
+---
+
+© 2025 Vertex Creations. Todos los derechos reservados.
