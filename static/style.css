@@ -5,8 +5,9 @@
     --bg-color: #f0f4f8;
     --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
 
-    --surface-color: rgba(255, 255, 255, 0.9);
-    --surface-glass: rgba(255, 255, 255, 0.7);
+    /* Solid Colors - Removed Transparency */
+    --surface-color: #ffffff;
+    --surface-glass: #ffffff;
     --surface-hover: #f8fafc;
 
     --primary-color: #6366f1;
@@ -107,12 +108,11 @@ body {
 .sidebar {
     width: 280px;
     background-color: var(--surface-glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    /* Removed backdrop-filter for solid look */
     padding: 2rem 1.5rem;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid rgba(255, 255, 255, 0.5);
+    border-right: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     height: 100vh;
@@ -190,7 +190,7 @@ body {
 .nav-links a:hover {
     background-color: var(--surface-hover);
     color: var(--primary-color);
-    transform: translateX(5px);
+    /* Removed transform: translateX */
 }
 
 .nav-links a.active {
@@ -252,7 +252,7 @@ h1 {
 
 .user-profile:hover {
     box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+    /* Removed transform: translateY */
 }
 
 .user-profile i {
@@ -290,7 +290,7 @@ h1 {
 
 .btn-primary:hover {
     box-shadow: 0 8px 16px rgba(99, 102, 241, 0.5);
-    transform: translateY(-2px);
+    /* Removed transform: translateY */
 }
 
 .btn-secondary {
@@ -303,7 +303,7 @@ h1 {
 .btn-secondary:hover {
     background-color: var(--surface-hover);
     border-color: #cbd5e1;
-    transform: translateY(-2px);
+    /* Removed transform: translateY */
 }
 
 .btn-danger {
@@ -315,7 +315,7 @@ h1 {
 .btn-danger:hover {
     background-color: #dc2626;
     box-shadow: 0 8px 16px rgba(239, 68, 68, 0.5);
-    transform: translateY(-2px);
+    /* Removed transform: translateY */
 }
 
 /* Forms */
@@ -365,15 +365,15 @@ select:focus {
     border-radius: var(--radius);
     padding: 1.5rem;
     box-shadow: var(--shadow-sm);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--border-color);
     transition: all var(--transition-normal);
     position: relative;
     overflow: hidden;
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-xl);
+    /* Removed transform: translateY */
+    box-shadow: var(--shadow-md);
     border-color: var(--primary-color);
 }
 
@@ -499,9 +499,9 @@ tr:hover td {
     padding: 2rem;
     display: flex;
     flex-direction: column;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(10px);
+    /* Removed backdrop-filter */
 }
 
 .cart-panel h2 {
@@ -526,7 +526,7 @@ tr:hover td {
     align-items: center;
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: var(--bg-color);
     border-radius: var(--radius);
     margin-bottom: 0.75rem;
     transition: var(--transition-fast);
@@ -534,7 +534,7 @@ tr:hover td {
 
 .cart-item:hover {
     background-color: #fff;
-    transform: scale(1.02);
+    /* Removed transform: scale */
     box-shadow: var(--shadow-sm);
 }
 
@@ -588,7 +588,7 @@ tr:hover td {
     width: 100%;
     height: 100%;
     background-color: rgba(15, 23, 42, 0.7);
-    backdrop-filter: blur(8px);
+    /* Removed backdrop-filter */
     justify-content: center;
     align-items: center;
     z-index: 1000;
