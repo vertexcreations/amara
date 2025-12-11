@@ -30,6 +30,7 @@ echo.
 
 pyinstaller --noconsole --onefile ^
     --name "MiTiendaPoS" ^
+    --icon "static/icon.ico" ^
     --add-data "templates;templates" ^
     --add-data "static;static" ^
     desktop_app.py

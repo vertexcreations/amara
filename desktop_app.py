@@ -29,6 +29,12 @@ if __name__ == '__main__':
     # Esperar un momento para asegurar que el servidor arranque
     time.sleep(1)
 
+    # Determinar la ruta del icono
+    if getattr(sys, 'frozen', False):
+        icon_path = os.path.join(sys._MEIPASS, 'static', 'icon.ico')
+    else:
+        icon_path = os.path.join(os.path.dirname(__file__), 'static', 'icon.ico')
+
     # Iniciar la ventana nativa
     webview.create_window(
         'Mi Tienda PoS', 
@@ -39,4 +45,4 @@ if __name__ == '__main__':
         min_size=(800, 600)
     )
     
-    webview.start()
+    webview.start(icon=icon_path)
