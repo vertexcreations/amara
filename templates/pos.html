@@ -38,19 +38,26 @@
     async function init() {
         allProducts = await api.getProducts();
         renderProducts(allProducts);
+        renderCart();
     }
 
     function renderProducts(products) {
         const container = document.getElementById('productsContainer');
-        container.innerHTML = products.map(p => `
-            <div class="card" onclick="addToCart(${p.id})" style="cursor: pointer; transition: transform 0.2s;">
-                <h4>${p.name}</h4>
-                <p class="text-secondary">${p.sku}</p>
-                <div class="flex justify-between mt-2">
-                    <span>${p.size || ''} ${p.color || ''}</span>
-                    <span style="font-weight: bold; color: var(--primary-color)">${formatCurrency(p.price)}</span>
+        container.innerHTML = products.map((p, index) => `
+            <div class="card" onclick="addToCart(${p.id})" style="cursor: pointer; animation: fadeIn 0.5s ease forwards; animation-delay: ${index * 0.05}s; opacity: 0;">
+                <div style="height: 120px; background: var(--bg-gradient); border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; color: var(--primary-color);">
+                    <i class='bx bxs-package' style="font-size: 3rem; opacity: 0.5;"></i>
                 </div>
-                <small>Stock: ${p.stock_quantity}</small>
+                <h4>${p.name}</h4>
+                <p class="text-secondary" style="font-size: 0.9rem; margin-bottom: 0.5rem;">${p.sku}</p>
+                <div class="flex justify-between items-center mt-2">
+                    <span style="background: var(--surface-hover); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">${p.size || '-'} ${p.color || ''}</span>
+                    <span style="font-weight: 800; color: var(--primary-color); font-size: 1.1rem;">${formatCurrency(p.price)}</span>
+                </div>
+                <div style="margin-top: 0.75rem; font-size: 0.85rem; color: ${p.stock_quantity < 5 ? 'var(--error-color)' : 'var(--text-secondary)'}; display: flex; align-items: center; gap: 0.25rem;">
+                    <i class='bx ${p.stock_quantity < 5 ? 'bxs-error-circle' : 'bxs-check-circle'}'></i>
+                    Stock: ${p.stock_quantity}
+                </div>
             </div>
         `).join('');
     }
@@ -89,10 +96,31 @@
         renderCart();
     }
 
+    function updateQuantity(productId, change) {
+        const item = cart.find(i => i.id === productId);
+        if (!item) return;
+
+        const product = allProducts.find(p => p.id === productId);
+        const newQuantity = item.quantity + change;
+
+        if (newQuantity <= 0) {
+            removeFromCart(productId);
+            return;
+        }
+
+        if (newQuantity > product.stock_quantity) {
+            alert('¡No hay suficiente stock!');
+            return;
+        }
+
+        item.quantity = newQuantity;
+        renderCart();
+    }
+
     function renderCart() {
         const container = document.getElementById('cartItems');
         if (cart.length === 0) {
-            container.innerHTML = '<div class="text-center text-secondary mt-2">El carrito está vacío</div>';
+            container.innerHTML = '<div class="text-center text-secondary mt-2" style="padding: 2rem; opacity: 0.7;"><i class="bx bx-cart" style="font-size: 3rem; margin-bottom: 1rem;"></i><br>El carrito está vacío</div>';
             document.getElementById('cartTotal').innerText = '$0.00';
             return;
         }
@@ -102,11 +130,21 @@
             total += item.price * item.quantity;
             return `
                 <div class="cart-item">
-                    <div>
-                        <strong>${item.name}</strong><br>
-                        <small>${item.quantity} x ${formatCurrency(item.price)}</small>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 40px; height: 40px; background: var(--bg-gradient); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--primary-color);">
+                            <i class='bx bxs-package'></i>
+                        </div>
+                        <div>
+                            <strong>${item.name}</strong><br>
+                            <small class="text-secondary">${formatCurrency(item.price)} c/u</small>
+                        </div>
                     </div>
-                    <button onclick="removeFromCart(${item.id})" class="btn btn-danger" style="padding: 0.25rem 0.5rem;">&times;</button>
+                    <div class="cart-item-controls">
+                        <button onclick="updateQuantity(${item.id}, -1)" class="btn-qty"><i class='bx bx-minus'></i></button>
+                        <span style="font-weight: 600; min-width: 24px; text-align: center;">${item.quantity}</span>
+                        <button onclick="updateQuantity(${item.id}, 1)" class="btn-qty"><i class='bx bx-plus'></i></button>
+                        <button onclick="removeFromCart(${item.id})" class="btn btn-danger" style="width: 32px; height: 32px; padding: 0; border-radius: 8px; margin-left: 0.5rem;"><i class='bx bx-trash'></i></button>
+                    </div>
                 </div>
             `;
         }).join('');
