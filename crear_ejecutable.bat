@@ -6,11 +6,11 @@ echo ===================================================
 echo.
 
 :: 1. Verificar entorno virtual
-if not exist ".venv" (
+if not exist ".venv311" (
     echo [INFO] Creando entorno virtual...
-    python -m venv .venv
+    py -3.11 -m venv .venv311
 )
-call .venv\Scripts\activate
+call .venv311\Scripts\activate
 
 :: 2. Instalar dependencias
 echo [INFO] Instalando librerias necesarias (esto puede tardar)...

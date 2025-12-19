@@ -3,64 +3,70 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
-<div class="grid-container">
-    <div class="card" style="animation: fadeIn 0.5s ease forwards; animation-delay: 0.1s; opacity: 0;">
-        <div class="flex justify-between items-center">
-            <div>
-                <h3
-                    style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
-                    Ventas de Hoy</h3>
-                <p id="today-sales" class="mt-2"
-                    style="font-size: 2.5rem; font-weight: 700; background: var(--secondary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                    $0.00</p>
-            </div>
-            <div
-                style="width: 50px; height: 50px; background: rgba(14, 165, 233, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                <i class='bx bx-dollar-circle' style="font-size: 2rem; color: var(--secondary-color);"></i>
-            </div>
+<!-- Stats Row -->
+<div class="dashboard-stats">
+    <!-- Sales -->
+    <div class="stat-card-compact">
+        <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: var(--secondary-color);">
+            <i class='bx bx-dollar-circle'></i>
         </div>
-        <small class="text-secondary mt-2" style="display: block;">Actualizado hoy</small>
-    </div>
-    <div class="card" style="animation: fadeIn 0.5s ease forwards; animation-delay: 0.2s; opacity: 0;">
-        <div class="flex justify-between items-center">
-            <div>
-                <h3
-                    style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
-                    Artículos Vendidos</h3>
-                <p id="items-sold" class="mt-2"
-                    style="font-size: 2.5rem; font-weight: 700; color: var(--text-primary);">0</p>
-            </div>
-            <div
-                style="width: 50px; height: 50px; background: rgba(99, 102, 241, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                <i class='bx bx-shopping-bag' style="font-size: 2rem; color: var(--primary-color);"></i>
-            </div>
+        <div class="stat-info">
+            <h4>Ventas Hoy</h4>
+            <div class="value" id="today-sales">$0.00</div>
         </div>
     </div>
-    <div class="card" style="animation: fadeIn 0.5s ease forwards; animation-delay: 0.3s; opacity: 0;">
-        <div class="flex justify-between items-center">
-            <div>
-                <h3
-                    style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
-                    Stock Bajo</h3>
-                <p id="low-stock" class="mt-2" style="font-size: 2.5rem; font-weight: 700; color: var(--error-color);">0
-                </p>
-            </div>
-            <div
-                style="width: 50px; height: 50px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                <i class='bx bx-error-circle' style="font-size: 2rem; color: var(--error-color);"></i>
-            </div>
+    <!-- Items -->
+    <div class="stat-card-compact">
+        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color);">
+            <i class='bx bx-shopping-bag'></i>
+        </div>
+        <div class="stat-info">
+            <h4>Artículos</h4>
+            <div class="value" id="items-sold">0</div>
+        </div>
+    </div>
+    <!-- Low Stock -->
+    <div class="stat-card-compact">
+        <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--error-color);">
+            <i class='bx bx-error-circle'></i>
+        </div>
+        <div class="stat-info">
+            <h4>Stock Bajo</h4>
+            <div class="value" id="low-stock" style="color: var(--error-color)">0</div>
         </div>
     </div>
 </div>
 
-<div class="card mt-2" style="animation: fadeIn 0.5s ease forwards; animation-delay: 0.4s; opacity: 0;">
-    <div class="flex items-center gap-2 mb-2">
-        <i class='bx bx-bolt-circle' style="font-size: 1.5rem; color: var(--warning-color);"></i>
-        <h3>Acciones Rápidas</h3>
+<div class="dashboard-grid">
+    <!-- Quick Actions -->
+    <div>
+        <h3 class="section-title"><i class='bx bx-bolt-circle'></i> Accesos Rápidos</h3>
+        <div class="actions-grid">
+            <a href="/pos" class="action-tile">
+                <i class='bx bxs-cart-add'></i>
+                <span>Nueva Venta</span>
+            </a>
+            <a href="/inventory" class="action-tile">
+                <i class='bx bxs-box'></i>
+                <span>Inventario</span>
+            </a>
+            <a href="/sales" class="action-tile">
+                <i class='bx bxs-report'></i>
+                <span>Historial</span>
+            </a>
+            <a href="/categories" class="action-tile">
+                <i class='bx bxs-category'></i>
+                <span>Categorías</span>
+            </a>
+        </div>
     </div>
-    <div class="flex mt-2">
-        <a href="/pos" class="btn btn-primary"><i class='bx bx-cart-add'></i> Nueva Venta</a>
-        <a href="/inventory" class="btn btn-secondary"><i class='bx bx-list-ul'></i> Gestionar Inventario</a>
+
+    <!-- Recent Activity -->
+    <div>
+        <h3 class="section-title"><i class='bx bx-time-five'></i> Actividad Reciente</h3>
+        <div class="recent-list" id="recent-sales-list">
+            <div class="recent-item text-secondary" style="justify-content: center;">Cargando...</div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -68,13 +74,38 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
+        // Load Stats
         try {
             const stats = await api.getDashboardStats();
             document.getElementById('today-sales').textContent = formatCurrency(stats.today_sales);
             document.getElementById('items-sold').textContent = stats.items_sold;
             document.getElementById('low-stock').textContent = stats.low_stock;
         } catch (error) {
-            console.error('Error loading dashboard stats:', error);
+            console.error('Error loading stats:', error);
+        }
+
+        // Load Recent Sales
+        try {
+            const sales = await api.getSales();
+            const recent = sales.slice(0, 5);
+            const container = document.getElementById('recent-sales-list');
+
+            if (recent.length === 0) {
+                container.innerHTML = '<div class="recent-item text-secondary" style="justify-content: center;">No hay ventas recientes</div>';
+                return;
+            }
+
+            container.innerHTML = recent.map(sale => `
+                <div class="recent-item">
+                    <div>
+                        <div class="recent-id">#${sale.id}</div>
+                        <small class="text-secondary">${new Date(sale.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                    </div>
+                    <div class="recent-amount">${formatCurrency(sale.total_amount)}</div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Error loading recent sales:', error);
         }
     });
 </script>

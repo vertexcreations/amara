@@ -3,89 +3,266 @@
 {% block title %}Historial de Ventas{% endblock %}
 
 {% block content %}
-<div id="salesContainer">
-    <!-- Populated by JS -->
+<div class="flex flex-col h-full" style="height: calc(100vh - 80px);">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4 px-1 flex-shrink-0">
+        <h2 class="m-0 text-primary font-bold text-lg flex items-center gap-2">
+            <i class='bx bx-history'></i> Historial de Ventas
+        </h2>
+        <div class="text-sm text-gray-500">
+            Total Ventas: <span id="totalSalesCount" class="font-bold text-gray-800">0</span>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow overflow-hidden">
+
+        <!-- Left Column: Sales List -->
+        <div class="md:col-span-1 flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Search/Filter -->
+            <div class="p-4 border-b border-gray-100 bg-gray-50">
+                <div class="relative">
+                    <i
+                        class='bx bx-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg'></i>
+                    <input type="text" id="searchInput" onkeyup="filterSales()" placeholder="Buscar por monto..."
+                        class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
+                </div>
+            </div>
+
+            <!-- List Container -->
+            <div class="overflow-y-auto flex-grow custom-scrollbar p-2 bg-gray-50/50">
+                <div id="salesList" class="space-y-4">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden flex flex-col items-center justify-center h-40 text-gray-400">
+                    <i class='bx bx-receipt text-4xl mb-2 opacity-50'></i>
+                    <p class="text-sm">No se encontraron ventas</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Receipt Detail -->
+        <div class="md:col-span-2 flex flex-col">
+            <div id="receiptContainer"
+                class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col hidden">
+                <!-- Receipt Header -->
+                <div class="p-6 border-b border-gray-100 flex justify-between items-start bg-gray-50 rounded-t-xl">
+                    <div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-1">Detalle de Venta</h3>
+                        <p class="text-sm text-gray-500 flex items-center gap-2">
+                            <i class='bx bx-calendar'></i> <span id="receiptDate">...</span>
+                            <span class="text-gray-300">|</span>
+                            <i class='bx bx-time'></i> <span id="receiptTime">...</span>
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-xs text-gray-500 uppercase tracking-wider mb-1">Total Pagado</span>
+                        <span id="receiptTotal" class="block text-2xl font-bold text-primary">Bs 0.00</span>
+                    </div>
+                </div>
+
+                <!-- Receipt Items -->
+                <div class="flex-grow overflow-y-auto p-6 custom-scrollbar">
+                    <table class="w-full text-sm">
+                        <thead class="text-xs text-gray-500 uppercase border-b border-gray-200">
+                            <tr>
+                                <th class="py-2 text-left font-semibold">Producto</th>
+                                <th class="py-2 text-center font-semibold w-24">Cant.</th>
+                                <th class="py-2 text-right font-semibold w-32">Precio Unit.</th>
+                                <th class="py-2 text-right font-semibold w-32">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receiptItems" class="divide-y divide-gray-100">
+                            <!-- Items -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Receipt Actions -->
+                <div class="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end gap-3">
+                    <button onclick="deleteCurrentSale()"
+                        class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 shadow-lg shadow-red-500/30 transition-all flex items-center gap-2">
+                        <i class='bx bx-trash'></i> Eliminar Venta
+                    </button>
+                </div>
+            </div>
+
+            <!-- No Selection State -->
+            <div id="noSelectionState"
+                class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col items-center justify-center text-gray-400 p-8">
+                <div class="bg-gray-50 p-6 rounded-full mb-4">
+                    <i class='bx bx-mouse text-4xl text-gray-300'></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">Selecciona una venta</h3>
+                <p class="text-sm text-center max-w-xs text-gray-500">Haz clic en una venta de la lista para ver los
+                    detalles y opciones.</p>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    async function loadSales() {
-        const sales = await api.getSales();
-        const container = document.getElementById('salesContainer');
+    const salesList = document.getElementById('salesList');
+    const emptyState = document.getElementById('emptyState');
+    const totalSalesCount = document.getElementById('totalSalesCount');
+    const searchInput = document.getElementById('searchInput');
 
-        // Group by date
+    const receiptContainer = document.getElementById('receiptContainer');
+    const noSelectionState = document.getElementById('noSelectionState');
+
+    // Receipt Elements
+    const receiptDate = document.getElementById('receiptDate');
+    const receiptTime = document.getElementById('receiptTime');
+    const receiptTotal = document.getElementById('receiptTotal');
+    const receiptItems = document.getElementById('receiptItems');
+
+    let allSales = [];
+    let currentSaleId = null;
+
+    async function loadSales() {
+        try {
+            const sales = await api.getSales();
+            allSales = sales;
+            totalSalesCount.textContent = sales.length;
+            renderList(sales);
+        } catch (error) {
+            console.error("Error loading sales:", error);
+        }
+    }
+
+    function renderList(sales) {
+        salesList.innerHTML = '';
+
+        if (sales.length === 0) {
+            emptyState.classList.remove('hidden');
+            return;
+        }
+        emptyState.classList.add('hidden');
+
+        // Group by Date
         const groups = {};
         sales.forEach(sale => {
             const dateObj = new Date(sale.timestamp);
-            const dateKey = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+            const dateKey = dateObj.toLocaleDateString('es-BO', { weekday: 'long', day: 'numeric', month: 'long' });
+            const dateKeyCapitalized = dateKey.charAt(0).toUpperCase() + dateKey.slice(1);
 
-            if (!groups[dateKey]) {
-                groups[dateKey] = {
-                    dateObj: dateObj,
-                    sales: [],
-                    total: 0
-                };
+            if (!groups[dateKeyCapitalized]) {
+                groups[dateKeyCapitalized] = [];
             }
-            groups[dateKey].sales.push(sale);
-            groups[dateKey].total += sale.total_amount;
+            groups[dateKeyCapitalized].push(sale);
         });
 
-        // Sort dates descending (newest first)
-        const sortedKeys = Object.keys(groups).sort().reverse();
+        Object.keys(groups).forEach(dateHeader => {
+            // Header
+            const header = document.createElement('div');
+            header.className = 'px-2 pt-2 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-gray-50/95 backdrop-blur-sm z-10';
+            header.textContent = dateHeader;
+            salesList.appendChild(header);
 
-        if (sortedKeys.length === 0) {
-            container.innerHTML = '<div class="card"><p class="text-center text-secondary">No hay ventas registradas.</p></div>';
-            return;
-        }
-
-        container.innerHTML = sortedKeys.map(key => {
-            const group = groups[key];
-            // Format date: "Lunes, 9 de diciembre de 2025"
-            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            let dateStr = group.dateObj.toLocaleDateString('es-BO', dateOptions);
-            dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
-
-            const salesRows = group.sales.map(sale => {
+            // Items
+            const dailyTotal = groups[dateHeader].length;
+            groups[dateHeader].forEach((sale, index) => {
+                const isSelected = currentSaleId === sale.id;
                 const timeStr = new Date(sale.timestamp).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
-                const itemsSummary = sale.items.map(i => `${i.quantity}x ${i.product_name}`).join(', ');
+                const dailyId = dailyTotal - index; // Calculate sequential ID (Newest = Total, Oldest = 1)
 
-                return `
-                    <tr>
-                        <td style="white-space: nowrap; color: var(--text-secondary);">${timeStr}</td>
-                        <td>#${sale.id}</td>
-                        <td>${itemsSummary}</td>
-                        <td class="text-right font-medium">${formatCurrency(sale.total_amount)}</td>
-                    </tr>
-                `;
-            }).join('');
+                const item = document.createElement('div');
+                item.className = `mx-2 p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${isSelected ? 'bg-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 hover:border-gray-300'}`;
+                item.onclick = () => selectSale(sale);
 
-            return `
-                <div class="card" style="margin-bottom: 1.5rem;">
-                    <div class="flex justify-between items-center mb-3 pb-2 border-bottom" style="border-bottom: 1px solid var(--border-color);">
-                        <h3 style="font-size: 1.25rem; color: var(--text-primary); margin: 0;">${dateStr}</h3>
-                        <span style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color);">
-                            Total: ${formatCurrency(group.total)}
-                        </span>
+                item.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-gray-100 text-gray-600 text-xs font-bold px-1.5 py-0.5 rounded border border-gray-200">#${dailyId}</span>
+                            <span class="font-bold text-gray-800">${formatCurrency(sale.total_amount)}</span>
+                        </div>
+                        <span class="text-xs text-gray-400 font-mono">${timeStr}</span>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Hora</th>
-                                <th>ID</th>
-                                <th>Artículos</th>
-                                <th class="text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${salesRows}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }).join('');
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <span>${sale.items.length} artículos</span>
+                        <i class='bx bx-chevron-right text-gray-300'></i>
+                    </div>
+                `;
+                salesList.appendChild(item);
+            });
+        });
     }
 
+    function selectSale(sale) {
+        currentSaleId = sale.id;
+
+        // Update UI Selection
+        renderList(allSales.filter(s => filterCondition(s))); // Re-render to show selection highlight
+
+        // Show Receipt
+        noSelectionState.classList.add('hidden');
+        receiptContainer.classList.remove('hidden');
+
+        // Populate Data
+        const dateObj = new Date(sale.timestamp);
+        receiptDate.textContent = dateObj.toLocaleDateString('es-BO', { day: 'numeric', month: 'long', year: 'numeric' });
+        receiptTime.textContent = dateObj.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
+        receiptTotal.textContent = formatCurrency(sale.total_amount);
+
+        receiptItems.innerHTML = sale.items.map(item => `
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="py-3 text-gray-800 font-medium">
+                    ${item.product_name}
+                </td>
+                <td class="py-3 text-center text-gray-600">
+                    <span class="bg-gray-100 px-2 py-1 rounded-md text-xs font-bold">${item.quantity}</span>
+                </td>
+                <td class="py-3 text-right text-gray-600 text-xs">
+                    ${formatCurrency(item.price_at_sale)}
+                </td>
+                <td class="py-3 text-right font-bold text-gray-800">
+                    ${formatCurrency(item.quantity * item.price_at_sale)}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function filterCondition(sale) {
+        const query = searchInput.value.toLowerCase();
+        // Simple filter by amount or item name
+        const amountMatch = sale.total_amount.toString().includes(query);
+        // Could expand to search item names if needed, but keeping it simple for now
+        return amountMatch;
+    }
+
+    function filterSales() {
+        const filtered = allSales.filter(s => filterCondition(s));
+        renderList(filtered);
+    }
+
+    async function deleteCurrentSale() {
+        if (!currentSaleId) return;
+
+        if (confirm('¿Estás seguro de eliminar esta venta? Se restaurará el stock de los productos.')) {
+            try {
+                await api.deleteSale(currentSaleId);
+
+                // Reset Selection
+                currentSaleId = null;
+                noSelectionState.classList.remove('hidden');
+                receiptContainer.classList.add('hidden');
+
+                loadSales();
+            } catch (err) {
+                alert('Error al eliminar venta: ' + err.message);
+            }
+        }
+    }
+
+    function printReceipt() {
+        alert("Función de impresión simulada.\nAquí se abriría el diálogo de impresión del navegador o se enviaría a una impresora térmica.");
+    }
+
+    // Initial Load
     loadSales();
 </script>
 {% endblock %}

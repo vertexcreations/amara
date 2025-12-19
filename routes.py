@@ -69,9 +69,8 @@ def add_product():
     new_product = Product(
         name=data['name'],
         sku=data['sku'],
-        size=data.get('size'),
-        color=data.get('color'),
         price=data['price'],
+        cost_price=data.get('cost_price', 0.0),
         stock_quantity=data['stock_quantity'],
         category_id=data.get('category_id')
     )
@@ -85,9 +84,8 @@ def update_product(id):
     data = request.json
     product.name = data.get('name', product.name)
     product.sku = data.get('sku', product.sku)
-    product.size = data.get('size', product.size)
-    product.color = data.get('color', product.color)
     product.price = data.get('price', product.price)
+    product.cost_price = data.get('cost_price', product.cost_price)
     product.stock_quantity = data.get('stock_quantity', product.stock_quantity)
     product.category_id = data.get('category_id', product.category_id)
     
@@ -110,7 +108,25 @@ def checkout():
         return jsonify({'error': 'No items in cart'}), 400
         
     total_amount = 0
-    sale = Sale(total_amount=0) # Will update total later
+    
+    # Handle custom date
+    sale_date = datetime.now()
+    if 'date' in data and data['date']:
+        try:
+            # Append current time to the selected date to avoid all sales being at 00:00:00
+            # or just use the date part if that's preferred. 
+            # Let's use the date provided + current time for ordering within the day, 
+            # or just the date if we want it strict.
+            # User asked: "Poner la opción de poner la fecha de venta y registrar en ese día"
+            # Let's parse YYYY-MM-DD
+            custom_date = datetime.strptime(data['date'], '%Y-%m-%d')
+            # Keep current time for sorting, but on the custom day
+            now = datetime.now()
+            sale_date = custom_date.replace(hour=now.hour, minute=now.minute, second=now.second)
+        except ValueError:
+            pass # Fallback to now
+
+    sale = Sale(total_amount=0, timestamp=sale_date) 
     db.session.add(sale)
     
     try:
@@ -124,14 +140,17 @@ def checkout():
                 
             product.stock_quantity -= item['quantity']
             
+            # Use custom price if provided, else product price
+            price_to_use = float(item.get('custom_price', product.price))
+            
             sale_item = SaleItem(
                 sale=sale,
                 product=product,
                 quantity=item['quantity'],
-                price_at_sale=product.price
+                price_at_sale=price_to_use
             )
             db.session.add(sale_item)
-            total_amount += product.price * item['quantity']
+            total_amount += price_to_use * item['quantity']
             
         sale.total_amount = total_amount
         db.session.commit()
@@ -145,6 +164,34 @@ def checkout():
 def get_sales():
     sales = Sale.query.order_by(Sale.timestamp.desc()).all()
     return jsonify([s.to_dict() for s in sales])
+
+@main.route('/api/sales/<int:id>', methods=['DELETE'])
+def delete_sale(id):
+    sale = Sale.query.get_or_404(id)
+    
+    try:
+        # Restore stock
+        for item in sale.items:
+            product = Product.query.get(item.product_id)
+            if product:
+                product.stock_quantity += item.quantity
+        
+        # Delete sale (cascade should handle items if configured, but let's be safe)
+        # If cascade is not set in models, we might need to delete items first.
+        # SQLAlchemy default relationship usually doesn't cascade delete unless specified.
+        # Let's check models.py... items = db.relationship('SaleItem', backref='sale', lazy=True)
+        # No cascade specified. We should delete items manually or rely on DB FK cascade (if set).
+        # Safest is manual delete here or let SQLAlchemy handle it if we add cascade='all, delete-orphan' to model.
+        # Since we didn't edit Sale model relationship, let's manually delete items.
+        for item in sale.items:
+            db.session.delete(item)
+            
+        db.session.delete(sale)
+        db.session.commit()
+        return '', 204
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @main.route('/api/dashboard-stats')
 def dashboard_stats():

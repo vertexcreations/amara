@@ -10,16 +10,16 @@ class Category(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'name': self.name
+            'name': self.name,
+            'product_count': len(self.products)
         }
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     sku = db.Column(db.String(50), unique=True, nullable=False)
-    size = db.Column(db.String(10), nullable=True)
-    color = db.Column(db.String(20), nullable=True)
     price = db.Column(db.Float, nullable=False)
+    cost_price = db.Column(db.Float, default=0.0)
     stock_quantity = db.Column(db.Integer, default=0)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
     
@@ -30,9 +30,8 @@ class Product(db.Model):
             'id': self.id,
             'name': self.name,
             'sku': self.sku,
-            'size': self.size,
-            'color': self.color,
             'price': self.price,
+            'cost_price': self.cost_price,
             'stock_quantity': self.stock_quantity,
             'category_id': self.category_id,
             'category_name': self.category.name if self.category else None
@@ -40,7 +39,7 @@ class Product(db.Model):
 
 class Sale(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=datetime.now)
     total_amount = db.Column(db.Float, nullable=False)
     items = db.relationship('SaleItem', backref='sale', lazy=True)
 

@@ -1,10 +1,10 @@
 // Utility functions
-const formatCurrency = (amount) => {
+window.formatCurrency = (amount) => {
     return 'Bs ' + new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
 };
 
 // API calls
-const api = {
+window.api = {
     getProducts: async () => {
         const res = await fetch('/api/products');
         return await res.json();
@@ -20,17 +20,32 @@ const api = {
     deleteProduct: async (id) => {
         await fetch(`/api/products/${id}`, { method: 'DELETE' });
     },
-    checkout: async (items) => {
+    updateProduct: async (id, product) => {
+        const res = await fetch(`/api/products/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(product)
+        });
+        return await res.json();
+    },
+    checkout: async (items, date) => {
         const res = await fetch('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items })
+            body: JSON.stringify({ items, date })
         });
         if (!res.ok) {
             const err = await res.json();
             throw new Error(err.error);
         }
         return await res.json();
+    },
+    deleteSale: async (id) => {
+        const res = await fetch(`/api/sales/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Error deleting sale');
+        }
     },
     getSales: async () => {
         const res = await fetch('/api/sales');
