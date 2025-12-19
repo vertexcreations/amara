@@ -5,7 +5,7 @@
 {% block content %}
 <div class="flex flex-col h-full" style="height: calc(100vh - 80px);">
     <!-- Top Toolbar: Simplified Header -->
-    <div class="flex justify-between items-end mb-2 px-1" style="flex-shrink: 0;">
+    <div class="flex justify-between items-end mb-2 px-1 relative z-20" style="flex-shrink: 0;">
         <div class="flex gap-6 items-center">
             <h2 class="m-0 text-primary font-bold text-lg flex items-center gap-2">
                 <i class='bx bx-box'></i> Inventario
@@ -44,7 +44,9 @@
                 <!-- Populated by JS -->
             </select>
 
-            <button onclick="openModal()" class="btn btn-primary py-1 px-3 text-sm shadow-sm hover:shadow-md transition-all flex items-center gap-1"><i class='bx bx-plus'></i> <span class="hidden sm:inline">Nuevo</span></button>
+            <button onclick="openModal()"
+                class="btn btn-primary py-1 px-3 text-sm shadow-sm hover:shadow-md transition-all flex items-center gap-1"><i
+                    class='bx bx-plus'></i> <span class="hidden sm:inline">Nuevo</span></button>
         </div>
     </div>
 
@@ -341,4 +343,3 @@
     loadData();
 </script>
 {% endblock %}
-

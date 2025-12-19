@@ -5,34 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Tienda PoS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Local Fonts and Icons -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/boxicons/css/boxicons.min.css') }}">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#6366f1',
-                        secondary: '#0ea5e9',
-                        success: '#10b981',
-                        warning: '#f59e0b',
-                        danger: '#ef4444',
-                    }
-                }
-            }
-        }
-    </script>
-
+    <!-- Local Styles (Base/Components) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Tailwind CSS (Utilities - Must come last to override) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+
 </head>
 
-<body>
-    <nav class="sidebar">
+<body class="flex min-h-screen overflow-x-hidden bg-gray-50">
+    <nav class="sidebar z-50">
         <div class="brand">
             <i class='bx bxs-store'></i>
             Mi Tienda
@@ -56,7 +42,7 @@
         </ul>
     </nav>
 
-    <main class="main-content">
+    <main class="main-content flex-1 relative z-0">
         <header>
             <h1>{% block title %}Inicio{% endblock %}</h1>
             <div class="user-profile">

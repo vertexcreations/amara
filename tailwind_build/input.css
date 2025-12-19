@@ -1,6 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Import existing styles */
-@import "../static/style.css";
+@source "../templates/**/*.html";
+@source "../static/**/*.js";
+
+@theme {
+    --color-primary: #6366f1;
+    --color-primary-hover: #4338ca;
+    --color-secondary: #0ea5e9;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+}
