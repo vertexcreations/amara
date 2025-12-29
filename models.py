@@ -11,7 +11,8 @@ class Category(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'product_count': len(self.products)
+            'product_count': len(self.products),
+            'total_pieces': sum(p.stock_quantity for p in self.products)
         }
 
 class Product(db.Model):
@@ -44,10 +45,17 @@ class Sale(db.Model):
     items = db.relationship('SaleItem', backref='sale', lazy=True)
 
     def to_dict(self):
+        # Calculate total cost based on current product cost_price
+        # Note: Historical cost is not stored in SaleItem, so this is an approximation
+        total_cost = sum(item.quantity * (item.product.cost_price or 0.0) for item in self.items)
+        total_profit = self.total_amount - total_cost
+
         return {
             'id': self.id,
             'timestamp': self.timestamp.isoformat(),
             'total_amount': self.total_amount,
+            'total_cost': total_cost,
+            'total_profit': total_profit,
             'items': [item.to_dict() for item in self.items]
         }
 
@@ -63,6 +71,7 @@ class SaleItem(db.Model):
     def to_dict(self):
         return {
             'product_id': self.product_id,
+            'product_code': self.product.sku,
             'product_name': self.product.name,
             'quantity': self.quantity,
             'price_at_sale': self.price_at_sale,

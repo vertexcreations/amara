@@ -43,24 +43,47 @@
             </div>
         </div>
 
-        <!-- Right Column: Receipt Detail -->
-        <div class="md:col-span-2 flex flex-col">
+        <!-- Right Column: Receipt Detail & Day Detail -->
+        <div class="md:col-span-2 flex flex-col relative">
+            <!-- Day Details Container (List of Sales for a Day) -->
+            <div id="dayDetailsContainer"
+                class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex-col hidden absolute inset-0 z-10">
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                    <h3 class="font-bold text-xl text-gray-800" id="dayDetailTitle">Detalle del Día</h3>
+                    <div class="text-sm text-gray-500">
+                        <span id="dayDetailCount">0</span> ventas | Total: <span id="dayDetailTotal"
+                            class="font-bold text-primary">Bs 0.00</span>
+                    </div>
+                </div>
+                <div id="daySalesList" class="flex-grow overflow-y-auto p-4 space-y-3 custom-scrollbar bg-gray-50/50">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Receipt Container -->
             <div id="receiptContainer"
-                class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex-col hidden">
+                class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex-col hidden absolute inset-0 z-20">
                 <!-- Receipt Header -->
                 <div class="p-6 border-b border-gray-100 flex justify-between items-start bg-gray-50 rounded-t-xl">
-                    <div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-1">Detalle de Venta</h3>
-                        <p class="text-sm text-gray-500 flex items-center gap-2">
-                            <i class='bx bx-calendar'></i> <span id="receiptDate">...</span>
-                            <span class="text-gray-300">|</span>
-                            <i class='bx bx-time'></i> <span id="receiptTime">...</span>
-                        </p>
+                    <div class="flex flex-col gap-2">
+                        <button onclick="backToDayList()"
+                            class="self-start flex items-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg shadow-md hover:bg-primary-dark hover:shadow-lg transition-all mb-2 font-medium">
+                            <i class='bx bx-arrow-back'></i> Volver al listado
+                        </button>
+                        <div>
+                            <h3 class="font-bold text-xl text-gray-800 mb-1">Detalle de Venta</h3>
+                            <p class="text-sm text-gray-500 flex items-center gap-2">
+                                <i class='bx bx-calendar'></i> <span id="receiptDate">...</span>
+                                <span class="text-gray-300">|</span>
+                                <i class='bx bx-time'></i> <span id="receiptTime">...</span>
+                            </p>
+                        </div>
                     </div>
                     <div class="flex items-center gap-4">
                         <div class="text-right border-r border-gray-200 pr-4 py-1">
                             <span class="block text-xs text-gray-500 uppercase tracking-wider mb-1">Total Pagado</span>
                             <span id="receiptTotal" class="block text-2xl font-bold text-primary">Bs 0.00</span>
+                            <div id="receiptFinancials" class="text-xs text-gray-500 mt-1"></div>
                         </div>
                         <div class="flex items-center gap-1">
                             <button onclick="editCurrentSale()"
@@ -82,6 +105,7 @@
                     <table class="w-full text-sm">
                         <thead class="text-xs text-gray-500 uppercase border-b border-gray-200">
                             <tr>
+                                <th class="py-2 text-left font-semibold w-24">Código</th>
                                 <th class="py-2 text-left font-semibold">Producto</th>
                                 <th class="py-2 text-center font-semibold w-24">Cant.</th>
                                 <th class="py-2 text-right font-semibold w-32">Precio Unit.</th>
@@ -93,21 +117,17 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Receipt Actions (Moved to Header) -->
-                <!-- <div class="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end gap-3 relative z-20"> -->
-                <!-- </div> -->
             </div>
 
             <!-- No Selection State -->
             <div id="noSelectionState"
-                class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col items-center justify-center text-gray-400 p-8">
+                class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col items-center justify-center text-gray-400 p-8 absolute inset-0 z-0">
                 <div class="bg-gray-50 p-6 rounded-full mb-4">
-                    <i class='bx bx-mouse text-4xl text-gray-300'></i>
+                    <i class='bx bx-calendar text-4xl text-gray-300'></i>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">Selecciona una venta</h3>
-                <p class="text-sm text-center max-w-xs text-gray-500">Haz clic en una venta de la lista para ver los
-                    detalles y opciones.</p>
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">Selecciona un Día</h3>
+                <p class="text-sm text-center max-w-xs text-gray-500">Haz clic en una fecha de la lista para ver las
+                    ventas de ese día.</p>
             </div>
         </div>
     </div>
@@ -164,8 +184,16 @@
     const totalSalesCount = document.getElementById('totalSalesCount');
     const searchInput = document.getElementById('searchInput');
 
-    const receiptContainer = document.getElementById('receiptContainer');
+    // Containers
     const noSelectionState = document.getElementById('noSelectionState');
+    const dayDetailsContainer = document.getElementById('dayDetailsContainer');
+    const receiptContainer = document.getElementById('receiptContainer');
+
+    // Day Detail Elements
+    const dayDetailTitle = document.getElementById('dayDetailTitle');
+    const dayDetailCount = document.getElementById('dayDetailCount');
+    const daySalesList = document.getElementById('daySalesList');
+    const dayDetailTotal = document.getElementById('dayDetailTotal');
 
     // Receipt Elements
     const receiptDate = document.getElementById('receiptDate');
@@ -175,6 +203,7 @@
 
     let allSales = [];
     let currentSaleId = null;
+    let currentDaySales = [];
 
     async function loadSales() {
         try {
@@ -209,51 +238,113 @@
             groups[dateKeyCapitalized].push(sale);
         });
 
-        Object.keys(groups).forEach(dateHeader => {
-            // Header
-            const header = document.createElement('div');
-            header.className = 'px-2 pt-2 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-gray-50/95 backdrop-blur-sm z-10';
-            header.textContent = dateHeader;
-            salesList.appendChild(header);
+        // Current rendering logic: JUST rendering the days list on the left
+        Object.keys(groups).forEach((dateHeader, groupIndex) => {
+            const groupSales = groups[dateHeader];
+            const dailyTotalAmount = groupSales.reduce((sum, sale) => sum + sale.total_amount, 0);
 
-            // Items
-            const dailyTotal = groups[dateHeader].length;
-            groups[dateHeader].forEach((sale, index) => {
-                const isSelected = currentSaleId === sale.id;
-                const timeStr = new Date(sale.timestamp).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
-                const dailyId = dailyTotal - index; // Calculate sequential ID (Newest = Total, Oldest = 1)
+            // Container for the group (Day Card)
+            const groupContainer = document.createElement('div');
+            groupContainer.className = 'mb-3 bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group';
+            groupContainer.onclick = () => selectDay(groupSales, dateHeader);
 
-                const item = document.createElement('div');
-                item.className = `mx-2 p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${isSelected ? 'bg-white border-primary ring-1 ring-primary shadow-md' : 'bg-white border-gray-200 hover:border-gray-300'}`;
-                item.onclick = () => selectSale(sale);
-
-                item.innerHTML = `
-                    <div class="flex justify-between items-center mb-1">
+            groupContainer.innerHTML = `
+                <div class="p-4 flex flex-col gap-2">
+                    <div class="flex justify-between items-start">
                         <div class="flex items-center gap-2">
-                            <span class="bg-gray-100 text-gray-600 text-xs font-bold px-1.5 py-0.5 rounded border border-gray-200">#${dailyId}</span>
-                            <span class="font-bold text-gray-800">${formatCurrency(sale.total_amount)}</span>
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
+                                <i class='bx bx-calendar text-xl'></i>
+                            </div>
+                            <span class="font-bold text-gray-700 capitalize">${dateHeader}</span>
                         </div>
-                        <span class="text-xs text-gray-400 font-mono">${timeStr}</span>
+                        <i class='bx bx-chevron-right text-gray-300 text-xl group-hover:text-primary transition-colors'></i>
                     </div>
-                    <div class="flex justify-between items-center text-xs text-gray-500">
-                        <span>${sale.items.length} artículos</span>
-                        <i class='bx bx-chevron-right text-gray-300'></i>
+                    <div class="flex justify-between items-center border-t border-gray-50 pt-2 mt-1">
+                        <span class="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-md">${groupSales.length} ventas</span>
+                        <div class="text-right">
+                             <div class="text-xs text-gray-400">Ganancia: <span class="text-green-500 font-semibold">${formatCurrency(groupSales.reduce((s, sale) => s + (sale.total_profit || 0), 0))}</span></div>
+                             <div class="font-bold text-primary text-lg">${formatCurrency(dailyTotalAmount)}</div>
+                        </div>
                     </div>
-                `;
-                salesList.appendChild(item);
-            });
+                </div>
+            `;
+            salesList.appendChild(groupContainer);
         });
+    }
+
+    function selectDay(sales, dateTitle) {
+        currentDaySales = sales; // Store for context
+
+        // UI Updates
+        noSelectionState.classList.add('hidden');
+        receiptContainer.classList.add('hidden');
+        dayDetailsContainer.classList.remove('hidden');
+        dayDetailsContainer.classList.add('flex');
+
+        // Update Header
+        dayDetailTitle.textContent = dateTitle;
+        dayDetailCount.textContent = sales.length;
+        const total = sales.reduce((sum, s) => sum + s.total_amount, 0);
+        const totalCost = sales.reduce((sum, s) => sum + (s.total_cost || 0), 0);
+        const totalProfit = sales.reduce((sum, s) => sum + (s.total_profit || 0), 0);
+
+        dayDetailTotal.innerHTML = `
+            <div class="flex flex-col items-end">
+                <span class="font-bold text-primary">${formatCurrency(total)}</span>
+                <span class="text-xs text-gray-400">Costo: ${formatCurrency(totalCost)} | Ganancia: <span class="text-green-600 font-bold">${formatCurrency(totalProfit)}</span></span>
+            </div>
+        `;
+
+        // Render List
+        daySalesList.innerHTML = '';
+        sales.forEach((sale, index) => {
+            const timeStr = new Date(sale.timestamp).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
+
+            // Re-calc daily sequential ID
+            const dailyId = sales.length - index;
+
+            const item = document.createElement('div');
+            item.className = 'bg-white p-4 rounded-xl border border-gray-200 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer flex justify-between items-center group';
+            item.onclick = () => selectSale(sale);
+
+            item.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <span class="w-10 h-10 rounded-full bg-gray-50 text-gray-500 font-bold flex items-center justify-center text-sm border border-gray-200 group-hover:bg-primary group-hover:text-white transition-colors">#${dailyId}</span>
+                    <div>
+                        <p class="font-bold text-gray-800 text-lg">${formatCurrency(sale.total_amount)}</p>
+                        <p class="text-xs text-green-600 font-medium flex items-center gap-1">
+                            <i class='bx bx-trending-up'></i> Ganancia: ${formatCurrency(sale.total_profit || 0)}
+                        </p>
+                        <p class="text-xs text-gray-400 flex items-center gap-1">
+                            <i class='bx bx-time'></i> ${timeStr}
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <span class="text-xs text-gray-400 block">${sale.items.length} productos</span>
+                    </div>
+                    <i class='bx bx-chevron-right text-gray-300 text-2xl group-hover:text-primary transition-colors'></i>
+                </div>
+            `;
+            daySalesList.appendChild(item);
+        });
+    }
+
+    function backToDayList() {
+        receiptContainer.classList.add('hidden');
+        receiptContainer.classList.remove('flex');
+
+        dayDetailsContainer.classList.remove('hidden');
+        dayDetailsContainer.classList.add('flex');
+        currentSaleId = null;
     }
 
     function selectSale(sale) {
         currentSaleId = sale.id;
 
-        // Update UI Selection
-        renderList(allSales.filter(s => filterCondition(s))); // Re-render to show selection highlight
-
-        // Show Receipt
-        noSelectionState.classList.add('hidden');
-        noSelectionState.classList.remove('flex');
+        // Show Receipt, Hide Day List
+        dayDetailsContainer.classList.add('hidden');
         receiptContainer.classList.remove('hidden');
         receiptContainer.classList.add('flex');
 
@@ -263,8 +354,19 @@
         receiptTime.textContent = dateObj.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
         receiptTotal.textContent = formatCurrency(sale.total_amount);
 
+        const financialsEl = document.getElementById('receiptFinancials');
+        if (financialsEl) {
+            financialsEl.innerHTML = `
+                <span class="block">Costo: ${formatCurrency(sale.total_cost || 0)}</span>
+                <span class="block text-green-600 font-bold">Ganancia: ${formatCurrency(sale.total_profit || 0)}</span>
+            `;
+        }
+
         receiptItems.innerHTML = sale.items.map(item => `
             <tr class="hover:bg-gray-50 transition-colors">
+                <td class="py-3 text-gray-800 font-mono text-xs">
+                    ${item.product_code || '-'}
+                </td>
                 <td class="py-3 text-gray-800 font-medium">
                     ${item.product_name}
                 </td>
@@ -290,6 +392,8 @@
     }
 
     function filterSales() {
+        // If filtering, we should probably show a flattened list or keep grouped
+        // For simplicity, let's keep grouped rendering but filter the input to renderList
         const filtered = allSales.filter(s => filterCondition(s));
         renderList(filtered);
     }
@@ -303,12 +407,18 @@
 
                 // Reset Selection
                 currentSaleId = null;
-                noSelectionState.classList.remove('hidden');
-                noSelectionState.classList.add('flex');
-                receiptContainer.classList.add('hidden');
-                receiptContainer.classList.remove('flex');
 
-                loadSales();
+                // Go back to updated day list or full list?
+                // Easiest is to reload mostly everything
+                receiptContainer.classList.add('hidden');
+
+                // Try to keep in day view if possible, but simplest is full reload
+                await loadSales(); // This resets the view to "No Selection"
+
+                // Ideally we'd reopen the day view, but let's just reset for stability for now.
+                noSelectionState.classList.remove('hidden');
+                dayDetailsContainer.classList.add('hidden');
+
             } catch (err) {
                 alert('Error al eliminar venta: ' + err.message);
             }
