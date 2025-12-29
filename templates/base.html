@@ -39,6 +39,9 @@
             <li><a href="/sales" class="{{ 'active' if request.path == '/sales' else '' }}">
                     <i class='bx bxs-report'></i> Historial
                 </a></li>
+            <li><a href="/backups" class="{{ 'active' if request.path.startswith('/backups') else '' }}">
+                    <i class='bx bxs-data'></i> Respaldos
+                </a></li>
         </ul>
     </nav>
 

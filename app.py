@@ -24,7 +24,10 @@ def create_app():
         db.create_all()
         
     from routes import main
+    from backup_routes import backup_bp
+    
     app.register_blueprint(main)
+    app.register_blueprint(backup_bp)
     
     return app
 

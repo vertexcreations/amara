@@ -165,6 +165,65 @@ def get_sales():
     sales = Sale.query.order_by(Sale.timestamp.desc()).all()
     return jsonify([s.to_dict() for s in sales])
 
+@main.route('/api/sales/<int:id>', methods=['PUT'])
+def update_sale(id):
+    sale = Sale.query.get_or_404(id)
+    data = request.json
+    new_items = data.get('items', [])
+    
+    if not new_items:
+        return jsonify({'error': 'No items provided'}), 400
+
+    try:
+        # 1. Revert Stock for existing items
+        for item in sale.items:
+            product = Product.query.get(item.product_id)
+            if product:
+                product.stock_quantity += item.quantity
+        
+        # 2. Delete existing items
+        # Use simple delete loop as we need to remove them to recreate new state
+        SaleItem.query.filter_by(sale_id=sale.id).delete()
+        
+        # 3. Create new items and deduct stock
+        total_amount = 0
+        for item_data in new_items:
+            product = Product.query.get(item_data['product_id'])
+            if not product:
+                raise Exception(f"Product {item_data['product_id']} not found")
+            
+            # Check stock
+            if product.stock_quantity < item_data['quantity']:
+                raise Exception(f"Insufficient stock for {product.name}. Available: {product.stock_quantity}")
+            
+            product.stock_quantity -= item_data['quantity']
+            
+            # Create SaleItem
+            # Allow price update if provided, otherwise check if price was sent or fallback
+            price = float(item_data.get('price_at_sale', product.price))
+            
+            new_sale_item = SaleItem(
+                sale=sale,
+                product=product,
+                quantity=item_data['quantity'],
+                price_at_sale=price
+            )
+            db.session.add(new_sale_item)
+            total_amount += price * item_data['quantity']
+            
+        # 4. Update Sale Totals
+        sale.total_amount = total_amount
+        
+        # Optional: Update timestamp if provided, though usually history is preserved
+        # if 'date' in data: ...
+        
+        db.session.commit()
+        return jsonify(sale.to_dict())
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 400
+
 @main.route('/api/sales/<int:id>', methods=['DELETE'])
 def delete_sale(id):
     sale = Sale.query.get_or_404(id)

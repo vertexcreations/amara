@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Respaldos{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">Respaldos del Sistema</h2>
+            <p class="text-gray-600 mt-1">Crea copias de seguridad de tu base de datos y restáuralas cuando sea
+                necesario.</p>
+        </div>
+        <button onclick="createBackup()"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg flex items-center gap-2 transition-all transform hover:-translate-y-0.5">
+            <i class='bx bxs-save text-xl'></i>
+            Crear Respaldo
+        </button>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8 border border-dashed border-gray-300">
+        <h3 class="text-lg font-semibold mb-4 text-gray-700">Importar Respaldo Externo</h3>
+        <form id="uploadForm" class="flex gap-4 items-center">
+            <input type="file" name="file" accept=".db" class="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100
+                cursor-pointer
+            ">
+            <button type="submit"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors shadow hover:shadow-md">
+                Subir
+            </button>
+        </form>
+    </div>
+
+    <!-- Backups List -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre
+                        del Archivo</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de
+                        Creación</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamaño
+                    </th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="backupsList">
+                {% if backups %}
+                {% for backup in backups %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ backup.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ backup.created_at }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ backup.size }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="restoreBackup('{{ backup.name }}')"
+                                class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-2 rounded-md transition-colors"
+                                title="Restaurar">
+                                <i class='bx bxs-cloud-upload text-xl'></i>
+                            </button>
+                            <a href="{{ url_for('backup.download_backup', filename=backup.name) }}"
+                                class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 rounded-md transition-colors"
+                                title="Descargar">
+                                <i class='bx bxs-download text-xl'></i>
+                            </a>
+                            <button onclick="deleteBackup('{{ backup.name }}')"
+                                class="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-md transition-colors"
+                                title="Eliminar">
+                                <i class='bx bxs-trash text-xl'></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                        No hay respaldos disponibles. ¡Crea uno ahora!
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function createBackup() {
+        if (!confirm('¿Estás seguro de que deseas crear un nuevo respaldo?')) return;
+
+        fetch('/backups/create', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Respaldo creado exitosamente');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => alert('Error de red: ' + err));
+    }
+
+    function restoreBackup(filename) {
+        if (!confirm('¡ADVERTENCIA! \n\nRestaurar este respaldo SOBREESCRIBIRÁ todos los datos actuales.\nEsta acción no se puede deshacer.\n\n¿Estás absolutamente seguro de continuar?')) return;
+
+        fetch(`/backups/restore/${filename}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => alert('Error de red: ' + err));
+    }
+
+    function deleteBackup(filename) {
+        if (!confirm('¿Seguro que deseas eliminar este archivo de respaldo?')) return;
+
+        fetch(`/backups/delete/${filename}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => alert('Error de red: ' + err));
+    }
+
+    document.getElementById('uploadForm').onsubmit = function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('/backups/upload', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => alert('Error de red: ' + err));
+    }
+</script>
+{% endblock %}

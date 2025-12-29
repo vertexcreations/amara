@@ -47,6 +47,18 @@ window.api = {
             throw new Error(err.error || 'Error deleting sale');
         }
     },
+    updateSale: async (id, data) => {
+        const res = await fetch(`/api/sales/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Error updating sale');
+        }
+        return await res.json();
+    },
     getSales: async () => {
         const res = await fetch('/api/sales');
         return await res.json();
