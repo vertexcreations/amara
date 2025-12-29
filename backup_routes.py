@@ -128,3 +128,5 @@ def upload_backup():
         return jsonify({'success': True, 'message': 'Backup uploaded successfully.'})
     else:
         return jsonify({'success': False, 'message': 'Invalid file type. Must be .db'}), 400
+
+
