@@ -1,0 +1,29 @@
+CHECKLIST PRE-PRODUCCION - AppPoS v3
+=====================================
+
+SEGURIDAD:
+[X] debug=False en app.py
+[X] Validacion de datos en add_category/add_product/update_product
+[X] Validacion de precios (no negativos)
+[X] Validacion de quantities (> 0)
+[X] Path traversal proteccion en backups
+[X] Try-catch en todos endpoints
+
+INTEGRIDAD DE DATOS:
+[X] Proteccion contra eliminar productos con ventas
+[X] Proteccion contra eliminar categorias con productos
+[X] Cascade delete en Sale.items
+[X] Restauracion de stock al eliminar ventas
+[X] Null-safety en to_dict() methods
+
+DATABASE:
+[X] timestamp con nullable=False
+[X] Relaciones con FK correctas
+[X] Indices en tablas principales (timestamp para sales)
+
+BACKUPS:
+[X] Crear backup antes de restaurar
+[X] Sanitizar filenames en upload/download/delete
+[X] Validacion de archivos .db
+
+STATUS: LISTO PARA PRODUCCION

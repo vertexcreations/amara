@@ -40,14 +40,14 @@ class Product(db.Model):
 
 class Sale(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime, default=datetime.now)
+    timestamp = db.Column(db.DateTime, default=datetime.now, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
-    items = db.relationship('SaleItem', backref='sale', lazy=True)
+    items = db.relationship('SaleItem', backref='sale', lazy=True, cascade='all, delete-orphan')
 
     def to_dict(self):
         # Calculate total cost based on current product cost_price
         # Note: Historical cost is not stored in SaleItem, so this is an approximation
-        total_cost = sum(item.quantity * (item.product.cost_price or 0.0) for item in self.items)
+        total_cost = sum(item.quantity * (item.product.cost_price if item.product else 0.0) for item in self.items)
         total_profit = self.total_amount - total_cost
 
         return {
@@ -71,8 +71,8 @@ class SaleItem(db.Model):
     def to_dict(self):
         return {
             'product_id': self.product_id,
-            'product_code': self.product.sku,
-            'product_name': self.product.name,
+            'product_code': self.product.sku if self.product else 'DELETED',
+            'product_name': self.product.name if self.product else '[Deleted Product]',
             'quantity': self.quantity,
             'price_at_sale': self.price_at_sale,
             'subtotal': self.quantity * self.price_at_sale

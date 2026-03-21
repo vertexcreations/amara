@@ -36,10 +36,16 @@ def get_categories():
 @main.route('/api/categories', methods=['POST'])
 def add_category():
     data = request.json
-    new_category = Category(name=data['name'])
-    db.session.add(new_category)
-    db.session.commit()
-    return jsonify(new_category.to_dict()), 201
+    if not data or not data.get('name'):
+        return jsonify({'error': 'Category name is required'}), 400
+    try:
+        new_category = Category(name=data['name'].strip())
+        db.session.add(new_category)
+        db.session.commit()
+        return jsonify(new_category.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 400
 
 @main.route('/api/categories/<int:id>', methods=['PUT'])
 def update_category(id):
@@ -52,7 +58,12 @@ def update_category(id):
 @main.route('/api/categories/<int:id>', methods=['DELETE'])
 def delete_category(id):
     category = Category.query.get_or_404(id)
-    # Optional: Check if products exist in this category before deleting
+
+    # Check if products exist in this category before deleting
+    products_count = Product.query.filter_by(category_id=id).count()
+    if products_count > 0:
+        return jsonify({'error': f'Cannot delete category with {products_count} product(s)'}), 400
+
     db.session.delete(category)
     db.session.commit()
     return '', 204
@@ -66,35 +77,72 @@ def get_products():
 @main.route('/api/products', methods=['POST'])
 def add_product():
     data = request.json
-    new_product = Product(
-        name=data['name'],
-        sku=data['sku'],
-        price=data['price'],
-        cost_price=data.get('cost_price', 0.0),
-        stock_quantity=data['stock_quantity'],
-        category_id=data.get('category_id')
-    )
-    db.session.add(new_product)
-    db.session.commit()
-    return jsonify(new_product.to_dict()), 201
+    required_fields = ['name', 'sku', 'price', 'stock_quantity']
+    if not data or not all(field in data for field in required_fields):
+        return jsonify({'error': f'Required fields: {", ".join(required_fields)}'}), 400
+    try:
+        price = float(data['price'])
+        cost_price = float(data.get('cost_price', 0.0))
+        if price < 0 or cost_price < 0:
+            return jsonify({'error': 'Price and cost_price must be >= 0'}), 400
+        new_product = Product(
+            name=data['name'].strip(),
+            sku=data['sku'].strip(),
+            price=price,
+            cost_price=cost_price,
+            stock_quantity=int(data['stock_quantity']),
+            category_id=data.get('category_id')
+        )
+        db.session.add(new_product)
+        db.session.commit()
+        return jsonify(new_product.to_dict()), 201
+    except ValueError as e:
+        return jsonify({'error': f'Invalid data type: {str(e)}'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 400
 
 @main.route('/api/products/<int:id>', methods=['PUT'])
 def update_product(id):
     product = Product.query.get_or_404(id)
     data = request.json
-    product.name = data.get('name', product.name)
-    product.sku = data.get('sku', product.sku)
-    product.price = data.get('price', product.price)
-    product.cost_price = data.get('cost_price', product.cost_price)
-    product.stock_quantity = data.get('stock_quantity', product.stock_quantity)
-    product.category_id = data.get('category_id', product.category_id)
-    
-    db.session.commit()
-    return jsonify(product.to_dict())
+    try:
+        if 'name' in data:
+            product.name = data['name'].strip()
+        if 'sku' in data:
+            product.sku = data['sku'].strip()
+        if 'price' in data:
+            price = float(data['price'])
+            if price < 0:
+                return jsonify({'error': 'Price cannot be negative'}), 400
+            product.price = price
+        if 'cost_price' in data:
+            cost_price = float(data['cost_price'])
+            if cost_price < 0:
+                return jsonify({'error': 'Cost price cannot be negative'}), 400
+            product.cost_price = cost_price
+        if 'stock_quantity' in data:
+            product.stock_quantity = int(data['stock_quantity'])
+        if 'category_id' in data:
+            product.category_id = data['category_id']
+
+        db.session.commit()
+        return jsonify(product.to_dict())
+    except ValueError as e:
+        return jsonify({'error': f'Invalid data type: {str(e)}'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 400
 
 @main.route('/api/products/<int:id>', methods=['DELETE'])
 def delete_product(id):
     product = Product.query.get_or_404(id)
+
+    # Check if product has associated sales
+    sales_count = SaleItem.query.filter_by(product_id=id).count()
+    if sales_count > 0:
+        return jsonify({'error': f'Cannot delete product with {sales_count} sale(s) in history'}), 400
+
     db.session.delete(product)
     db.session.commit()
     return '', 204
@@ -131,26 +179,35 @@ def checkout():
     
     try:
         for item in cart_items:
+            if not item.get('id') or not item.get('quantity'):
+                raise Exception("Missing item id or quantity")
+
             product = Product.query.get(item['id'])
             if not product:
                 raise Exception(f"Product {item['id']} not found")
-            
-            if product.stock_quantity < item['quantity']:
+
+            quantity = int(item['quantity'])
+            if quantity <= 0:
+                raise Exception("Quantity must be > 0")
+
+            if product.stock_quantity < quantity:
                 raise Exception(f"Insufficient stock for {product.name}")
-                
-            product.stock_quantity -= item['quantity']
-            
+
+            product.stock_quantity -= quantity
+
             # Use custom price if provided, else product price
             price_to_use = float(item.get('custom_price', product.price))
+            if price_to_use < 0:
+                raise Exception("Price cannot be negative")
             
             sale_item = SaleItem(
                 sale=sale,
                 product=product,
-                quantity=item['quantity'],
+                quantity=quantity,
                 price_at_sale=price_to_use
             )
             db.session.add(sale_item)
-            total_amount += price_to_use * item['quantity']
+            total_amount += price_to_use * quantity
             
         sale.total_amount = total_amount
         db.session.commit()
@@ -227,24 +284,15 @@ def update_sale(id):
 @main.route('/api/sales/<int:id>', methods=['DELETE'])
 def delete_sale(id):
     sale = Sale.query.get_or_404(id)
-    
+
     try:
-        # Restore stock
+        # Restore stock for all items in the sale
         for item in sale.items:
             product = Product.query.get(item.product_id)
             if product:
                 product.stock_quantity += item.quantity
-        
-        # Delete sale (cascade should handle items if configured, but let's be safe)
-        # If cascade is not set in models, we might need to delete items first.
-        # SQLAlchemy default relationship usually doesn't cascade delete unless specified.
-        # Let's check models.py... items = db.relationship('SaleItem', backref='sale', lazy=True)
-        # No cascade specified. We should delete items manually or rely on DB FK cascade (if set).
-        # Safest is manual delete here or let SQLAlchemy handle it if we add cascade='all, delete-orphan' to model.
-        # Since we didn't edit Sale model relationship, let's manually delete items.
-        for item in sale.items:
-            db.session.delete(item)
-            
+
+        # Delete sale (cascade='all, delete-orphan' in models handles SaleItem deletion)
         db.session.delete(sale)
         db.session.commit()
         return '', 204
