@@ -1,11 +1,25 @@
 import os
 import shutil
+import sqlite3
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, send_file, current_app, redirect, url_for, flash
 import sys
 from pathlib import Path
 
 backup_bp = Blueprint('backup', __name__, url_prefix='/backups')
+
+def validate_sqlite_db(filepath):
+    """Validate if file is a valid SQLite database."""
+    try:
+        conn = sqlite3.connect(filepath)
+        cursor = conn.cursor()
+        # Run integrity check
+        cursor.execute("PRAGMA integrity_check")
+        result = cursor.fetchone()
+        conn.close()
+        return result[0] == 'ok'
+    except Exception:
+        return False
 
 def sanitize_filename(filename):
     """Remove path traversal characters from filename"""
@@ -44,18 +58,49 @@ def index():
     """Render the backup management page."""
     backups = []
     backup_dir = get_backup_dir()
-    
+
     if os.path.exists(backup_dir):
+        # Cleanup old backups - keep only last 10
+        all_files = []
         for filename in os.listdir(backup_dir):
             if filename.endswith('.db'):
                 filepath = os.path.join(backup_dir, filename)
                 stat = os.stat(filepath)
-                backups.append({
+                all_files.append({
                     'name': filename,
-                    'size': f"{stat.st_size / 1024:.2f} KB",
-                    'created_at': datetime.fromtimestamp(stat.st_ctime).strftime('%Y-%m-%d %H:%M:%S')
+                    'path': filepath,
+                    'ctime': stat.st_ctime,
+                    'size': stat.st_size
                 })
-    
+
+        # Sort by creation time, delete oldest if more than 10
+        all_files.sort(key=lambda x: x['ctime'], reverse=True)
+
+        if len(all_files) > 10:
+            for old_file in all_files[10:]:
+                try:
+                    os.remove(old_file['path'])
+                except Exception:
+                    pass
+
+        # List valid backups
+        for file_info in all_files[:10]:
+            filepath = file_info['path']
+
+            # Verify file still exists (might have been deleted externally)
+            if not os.path.exists(filepath):
+                continue
+
+            is_valid = validate_sqlite_db(filepath)
+            status = '[OK]' if is_valid else '[CORRUPTO]'
+
+            backups.append({
+                'name': file_info['name'],
+                'size': f"{file_info['size'] / 1024:.2f} KB",
+                'created_at': datetime.fromtimestamp(file_info['ctime']).strftime('%Y-%m-%d %H:%M:%S'),
+                'status': status
+            })
+
     # Sort by creation time desc
     backups.sort(key=lambda x: x['created_at'], reverse=True)
     return render_template('backups.html', backups=backups)
@@ -89,6 +134,10 @@ def restore_backup(filename):
 
         if not os.path.exists(backup_path):
             return jsonify({'success': False, 'message': 'Backup file not found.'}), 404
+
+        # Validate backup integrity BEFORE restoring
+        if not validate_sqlite_db(backup_path):
+            return jsonify({'success': False, 'message': 'Backup file is corrupted. Cannot restore.'}), 400
 
         # Create a temp safety backup just in case
         safety_path = db_path + ".safety"
@@ -142,15 +191,34 @@ def upload_backup():
     if file.filename == '':
         return jsonify({'success': False, 'message': 'No selected file'}), 400
 
-    if file and file.filename.endswith('.db'):
-        try:
-            safe_filename = sanitize_filename(file.filename)
-            backup_dir = get_backup_dir()
-            file.save(os.path.join(backup_dir, safe_filename))
-            return jsonify({'success': True, 'message': 'Backup uploaded successfully.'})
-        except ValueError:
-            return jsonify({'success': False, 'message': 'Invalid filename'}), 400
-    else:
+    if not file.filename.endswith('.db'):
         return jsonify({'success': False, 'message': 'Invalid file type. Must be .db'}), 400
+
+    # Check file size (max 100MB)
+    if file.content_length and file.content_length > 100 * 1024 * 1024:
+        return jsonify({'success': False, 'message': 'File too large. Maximum 100MB.'}), 400
+
+    try:
+        safe_filename = sanitize_filename(file.filename)
+        backup_dir = get_backup_dir()
+        temp_path = os.path.join(backup_dir, f"{safe_filename}.tmp")
+
+        # Save to temp file first
+        file.save(temp_path)
+
+        # Validate before keeping
+        if not validate_sqlite_db(temp_path):
+            os.remove(temp_path)
+            return jsonify({'success': False, 'message': 'Invalid SQLite database file.'}), 400
+
+        # Move to final location
+        final_path = os.path.join(backup_dir, safe_filename)
+        os.rename(temp_path, final_path)
+
+        return jsonify({'success': True, 'message': 'Backup uploaded successfully.'})
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Invalid filename'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
