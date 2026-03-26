@@ -3,11 +3,21 @@ window.formatCurrency = (amount) => {
     return 'Bs ' + new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
 };
 
+// Helper: parse response, throw on error
+async function parseResponse(res) {
+    if (!res.ok) {
+        let msg = `Error ${res.status}`;
+        try { const err = await res.json(); msg = err.error || err.message || msg; } catch {}
+        throw new Error(msg);
+    }
+    return await res.json();
+}
+
 // API calls
 window.api = {
     getProducts: async () => {
         const res = await fetch('/api/products');
-        return await res.json();
+        return await parseResponse(res);
     },
     addProduct: async (product) => {
         const res = await fetch('/api/products', {
@@ -15,10 +25,7 @@ window.api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(product)
         });
-        return await res.json();
-    },
-    deleteProduct: async (id) => {
-        await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        return await parseResponse(res);
     },
     updateProduct: async (id, product) => {
         const res = await fetch(`/api/products/${id}`, {
@@ -26,7 +33,15 @@ window.api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(product)
         });
-        return await res.json();
+        return await parseResponse(res);
+    },
+    deleteProduct: async (id) => {
+        const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+            let msg = `Error ${res.status}`;
+            try { const err = await res.json(); msg = err.error || msg; } catch {}
+            throw new Error(msg);
+        }
     },
     checkout: async (items, date) => {
         const res = await fetch('/api/checkout', {
@@ -34,17 +49,18 @@ window.api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items, date })
         });
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error);
-        }
-        return await res.json();
+        return await parseResponse(res);
+    },
+    getSales: async () => {
+        const res = await fetch('/api/sales');
+        return await parseResponse(res);
     },
     deleteSale: async (id) => {
         const res = await fetch(`/api/sales/${id}`, { method: 'DELETE' });
         if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || 'Error deleting sale');
+            let msg = `Error ${res.status}`;
+            try { const err = await res.json(); msg = err.error || msg; } catch {}
+            throw new Error(msg);
         }
     },
     updateSale: async (id, data) => {
@@ -53,19 +69,11 @@ window.api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || 'Error updating sale');
-        }
-        return await res.json();
-    },
-    getSales: async () => {
-        const res = await fetch('/api/sales');
-        return await res.json();
+        return await parseResponse(res);
     },
     getCategories: async () => {
         const res = await fetch('/api/categories');
-        return await res.json();
+        return await parseResponse(res);
     },
     addCategory: async (category) => {
         const res = await fetch('/api/categories', {
@@ -73,13 +81,26 @@ window.api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(category)
         });
-        return await res.json();
+        return await parseResponse(res);
+    },
+    updateCategory: async (id, category) => {
+        const res = await fetch(`/api/categories/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(category)
+        });
+        return await parseResponse(res);
     },
     deleteCategory: async (id) => {
-        await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+            let msg = `Error ${res.status}`;
+            try { const err = await res.json(); msg = err.error || msg; } catch {}
+            throw new Error(msg);
+        }
     },
     getDashboardStats: async () => {
         const res = await fetch('/api/dashboard-stats');
-        return await res.json();
+        return await parseResponse(res);
     }
 };
