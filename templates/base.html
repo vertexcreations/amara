@@ -6,14 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Tienda PoS</title>
     <!-- Local Fonts and Icons -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/boxicons/css/boxicons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}?v={{ range(1, 10000) | random }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/boxicons/css/boxicons.min.css') }}?v={{ range(1, 10000) | random }}">
 
     <!-- Local Styles (Base/Components) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ range(1, 10000) | random }}">
 
     <!-- Tailwind CSS (Utilities - Must come last to override) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}?v={{ range(1, 10000) | random }}">
 
 </head>
 
@@ -42,6 +42,11 @@
             <li><a href="/backups" class="{{ 'active' if request.path.startswith('/backups') else '' }}">
                     <i class='bx bxs-data'></i> Respaldos
                 </a></li>
+            <li class="mt-8 border-t border-gray-200">
+                <a href="#" onclick="closeApplication()" class="text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors mt-2">
+                    <i class='bx bx-power-off'></i> Cerrar App
+                </a>
+            </li>
         </ul>
     </nav>
 
@@ -60,6 +65,88 @@
     {% block modals %}{% endblock %}
 
     <script src="{{ url_for('static', filename='script.js') }}?v={{ range(1, 10000) | random }}"></script>
+    <script>
+        let isClosingApp = false;
+
+        function closeApplication() {
+            // Prevent multiple clicks
+            if (isClosingApp) return;
+
+            if (confirm("¿Estás seguro que deseas cerrar la aplicación?\n\nSe cerrará después de guardar todos los datos.")) {
+                isClosingApp = true;
+
+                // Show loading state
+                const closeBtn = event.target.closest('a');
+                const originalText = closeBtn.innerHTML;
+                closeBtn.innerHTML = '<i class="bx bx-loader-circle bx-spin"></i> Cerrando...';
+                closeBtn.style.pointerEvents = 'none';
+                closeBtn.style.opacity = '0.6';
+
+                // Disable all buttons to prevent further interactions
+                document.querySelectorAll('button, a').forEach(el => {
+                    el.style.pointerEvents = 'none';
+                    el.style.opacity = '0.5';
+                });
+
+                // Dim the entire page
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.3);
+                    z-index: 9999;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                `;
+                overlay.innerHTML = `
+                    <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                        <i class="bx bx-loader-circle bx-spin" style="font-size: 2.5rem; color: #6366f1; margin-bottom: 1rem;"></i>
+                        <p style="font-size: 1.1rem; font-weight: 600; color: #0f172a; margin: 0;">Cerrando aplicación...</p>
+                        <p style="font-size: 0.9rem; color: #64748b; margin: 0.5rem 0 0 0;">Por favor espera mientras se guardan los datos.</p>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                if (window.pywebview && window.pywebview.api) {
+                    window.pywebview.api.close_app()
+                        .then(result => {
+                            // Success - app will close shortly
+                            console.log('App closing gracefully:', result);
+                        })
+                        .catch(error => {
+                            console.error('Error closing app:', error);
+                            alert('Error al cerrar la aplicación: ' + error);
+                            // Reset state
+                            isClosingApp = false;
+                            closeBtn.innerHTML = originalText;
+                            closeBtn.style.pointerEvents = 'auto';
+                            closeBtn.style.opacity = '1';
+                            document.querySelectorAll('button, a').forEach(el => {
+                                el.style.pointerEvents = 'auto';
+                                el.style.opacity = '1';
+                            });
+                            overlay.remove();
+                        });
+                } else {
+                    alert("Esta función solo está disponible en la versión ejecutable (.exe).");
+                    // Reset state
+                    isClosingApp = false;
+                    closeBtn.innerHTML = originalText;
+                    closeBtn.style.pointerEvents = 'auto';
+                    closeBtn.style.opacity = '1';
+                    document.querySelectorAll('button, a').forEach(el => {
+                        el.style.pointerEvents = 'auto';
+                        el.style.opacity = '1';
+                    });
+                    overlay.remove();
+                }
+            }
+        }
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 
