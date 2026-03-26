@@ -67,11 +67,11 @@
                                 title="Restaurar">
                                 <i class='bx bxs-cloud-upload text-xl'></i>
                             </button>
-                            <a href="{{ url_for('backup.download_backup', filename=backup.name) }}"
+                            <button onclick="downloadBackup('{{ backup.name }}')"
                                 class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 rounded-md transition-colors"
                                 title="Descargar">
                                 <i class='bx bxs-download text-xl'></i>
-                            </a>
+                            </button>
                             <button onclick="deleteBackup('{{ backup.name }}')"
                                 class="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-md transition-colors"
                                 title="Eliminar">
@@ -115,7 +115,7 @@
     function restoreBackup(filename) {
         if (!confirm('¡ADVERTENCIA! \n\nRestaurar este respaldo SOBREESCRIBIRÁ todos los datos actuales.\nEsta acción no se puede deshacer.\n\n¿Estás absolutamente seguro de continuar?')) return;
 
-        fetch(`/backups/restore/${filename}`, { method: 'POST' })
+        fetch(`/backups/restore/${encodeURIComponent(filename)}`, { method: 'POST' })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -131,7 +131,7 @@
     function deleteBackup(filename) {
         if (!confirm('¿Seguro que deseas eliminar este archivo de respaldo?')) return;
 
-        fetch(`/backups/delete/${filename}`, { method: 'DELETE' })
+        fetch(`/backups/delete/${encodeURIComponent(filename)}`, { method: 'DELETE' })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -144,6 +144,23 @@
     }
 
 
+
+    function downloadBackup(filename) {
+        if (window.pywebview && window.pywebview.api) {
+            window.pywebview.api.save_backup_dialog(filename).then(result => {
+                if (!result.success && result.message !== 'Cancelado') {
+                    alert('Error al guardar: ' + result.message);
+                } else if (result.success) {
+                    alert('Respaldo guardado exitosamente.');
+                }
+            }).catch(err => {
+                alert('Error al conectar con la aplicación: ' + err);
+            });
+        } else {
+            // Fallback para navegador web normal
+            window.location.href = `/backups/download/${encodeURIComponent(filename)}`;
+        }
+    }
 
     document.getElementById('uploadForm').onsubmit = function (e) {
         e.preventDefault();

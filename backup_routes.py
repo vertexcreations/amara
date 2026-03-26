@@ -5,6 +5,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, send_file, current_app, redirect, url_for, flash
 import sys
 from pathlib import Path
+from models import db
 
 backup_bp = Blueprint('backup', __name__, url_prefix='/backups')
 
@@ -22,15 +23,24 @@ def validate_sqlite_db(filepath):
         return False
 
 def sanitize_filename(filename):
-    """Remove path traversal characters from filename"""
-    # Only allow alphanumeric, underscore, hyphen, dot
-    import re
-    safe_name = re.sub(r'[^\w\-.]', '', filename)
+    """Prevent path traversal - only strip path components, preserve original name."""
+    # Remove any path separators (path traversal protection)
+    safe_name = os.path.basename(filename)
     # Remove leading dots to prevent hidden files
     safe_name = safe_name.lstrip('.')
     if not safe_name:
         raise ValueError("Invalid filename")
     return safe_name
+
+def safe_backup_path(filename):
+    """Returns absolute path only if it stays within the backup directory."""
+    backup_dir = get_backup_dir()
+    safe_name = sanitize_filename(filename)
+    full_path = os.path.realpath(os.path.join(backup_dir, safe_name))
+    # Verify the path doesn't escape the backup directory
+    if not full_path.startswith(os.path.realpath(backup_dir)):
+        raise ValueError("Invalid filename")
+    return full_path
 
 def get_data_dir():
     """Returns the same stable data directory as app.py."""
@@ -117,18 +127,19 @@ def create_backup():
         backup_filename = f"backup_{timestamp}.db"
         backup_path = os.path.join(backup_dir, backup_filename)
         
-        shutil.copy2(db_path, backup_path)
+        # Use native SQLite backup for safety
+        with sqlite3.connect(db_path) as src, sqlite3.connect(backup_path) as dst:
+            src.backup(dst)
+
         return jsonify({'success': True, 'message': 'Backup created successfully.'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
-@backup_bp.route('/restore/<filename>', methods=['POST'])
+@backup_bp.route('/restore/<path:filename>', methods=['POST'])
 def restore_backup(filename):
     """Restore the database from a backup file."""
     try:
-        safe_filename = sanitize_filename(filename)
-        backup_dir = get_backup_dir()
-        backup_path = os.path.join(backup_dir, safe_filename)
+        backup_path = safe_backup_path(filename)
         db_path = get_db_path()
 
         if not os.path.exists(backup_path):
@@ -141,42 +152,43 @@ def restore_backup(filename):
         # Create a temp safety backup just in case
         safety_path = db_path + ".safety"
         if os.path.exists(db_path):
-            shutil.copy2(db_path, safety_path)
+            with sqlite3.connect(db_path) as src, sqlite3.connect(safety_path) as dst:
+                src.backup(dst)
+
+        # Close SQLAlchemy connections to release the .db file lock on Windows
+        db.session.remove()
+        db.engine.dispose()
 
         shutil.copy2(backup_path, db_path)
 
-        return jsonify({'success': True, 'message': 'Database restored successfully. Please restart the application if you encounter issues.'})
-    except ValueError as e:
-        return jsonify({'success': False, 'message': 'Invalid filename'}), 400
+        return jsonify({'success': True, 'message': 'Base de datos restaurada. Reinicia la aplicacion si ves datos incorrectos.'})
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Nombre de archivo invalido'}), 400
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
-@backup_bp.route('/download/<filename>')
+@backup_bp.route('/download/<path:filename>')
 def download_backup(filename):
     """Download a backup file."""
     try:
-        safe_filename = sanitize_filename(filename)
-        backup_dir = get_backup_dir()
-        backup_path = os.path.join(backup_dir, safe_filename)
+        backup_path = safe_backup_path(filename)
         if not os.path.exists(backup_path):
-            return jsonify({'error': 'File not found'}), 404
+            return jsonify({'error': 'Archivo no encontrado'}), 404
         return send_file(backup_path, as_attachment=True)
     except ValueError:
-        return jsonify({'error': 'Invalid filename'}), 400
+        return jsonify({'error': 'Nombre de archivo invalido'}), 400
 
-@backup_bp.route('/delete/<filename>', methods=['DELETE'])
+@backup_bp.route('/delete/<path:filename>', methods=['DELETE'])
 def delete_backup(filename):
     """Delete a backup file."""
     try:
-        safe_filename = sanitize_filename(filename)
-        backup_dir = get_backup_dir()
-        filepath = os.path.join(backup_dir, safe_filename)
+        filepath = safe_backup_path(filename)
         if os.path.exists(filepath):
             os.remove(filepath)
-            return jsonify({'success': True, 'message': 'Backup deleted successfully.'})
-        return jsonify({'success': False, 'message': 'File not found.'}), 404
+            return jsonify({'success': True, 'message': 'Respaldo eliminado.'})
+        return jsonify({'success': False, 'message': 'Archivo no encontrado.'}), 404
     except ValueError:
-        return jsonify({'success': False, 'message': 'Invalid filename'}), 400
+        return jsonify({'success': False, 'message': 'Nombre de archivo invalido'}), 400
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 

@@ -52,9 +52,11 @@ REM Crear carpeta de backups si no existe
 if not exist "dist\backups" mkdir dist\backups
 
 if exist "dist\pos.db" (
-    for /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c%%a%%b)
-    for /f "tokens=1-2 delims=/:" %%a in ('time /t') do (set mytime=%%a%%b)
-    set TIMESTAMP=!mydate!_!mytime!
+    REM Use wmic for a clean timestamp without AM/PM spaces
+    for /f "skip=1 tokens=1-2" %%a in ('wmic os get localdatetime') do (
+        if not "%%a"=="" set TIMESTAMP=%%a
+    )
+    set TIMESTAMP=!TIMESTAMP:~0,8!_!TIMESTAMP:~8,6!
 
     echo Haciendo backup de BD actual...
     copy "dist\pos.db" "dist\backups\backup_!TIMESTAMP!.db" >nul
