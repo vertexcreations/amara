@@ -80,18 +80,17 @@
 {% endblock %}
 
 {% block modals %}
-<!-- Add/Edit Product Modal -->
+<!-- Add/Edit Product Modal - Improved UX -->
 <div id="productModal" style="z-index: 9999;"
     class="modal fixed inset-0 items-center justify-center bg-black/60 hidden opacity-0 transition-all duration-300 backdrop-blur-sm p-4">
 
-    <div
-        class="modal-content bg-white w-full max-w-3xl rounded-2xl shadow-2xl transform scale-95 transition-all duration-300 overflow-hidden relative border border-gray-100">
+    <div class="modal-content bg-white w-full max-w-4xl rounded-2xl shadow-2xl transform scale-95 transition-all duration-300 overflow-hidden relative border border-gray-100 flex flex-col max-h-[90vh]">
 
         <!-- Header -->
-        <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-blue-50">
             <div>
                 <h2 id="modalTitle" class="text-xl font-bold text-gray-800 tracking-tight">Nuevo Producto</h2>
-                <p class="text-sm text-gray-500 font-medium">Información general e inventario</p>
+                <p class="text-sm text-gray-500 font-medium">Completa todos los campos requeridos</p>
             </div>
             <button onclick="closeModal()"
                 class="group p-2 rounded-full hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">
@@ -99,134 +98,169 @@
             </button>
         </div>
 
-        <form id="productForm" class="p-0">
+        <form id="productForm" class="p-0 flex flex-col flex-grow overflow-hidden">
             <input type="hidden" name="id">
 
-            <div class="px-8 py-6 grid grid-cols-1 md:grid-cols-12 gap-8">
+            <!-- Form Content with Grid -->
+            <div class="flex-grow overflow-y-auto custom-scrollbar">
+                <div class="px-8 py-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                <!-- Left Column: Details -->
-                <div class="md:col-span-7 space-y-5">
-                    <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-primary/80">
-                            Detalles Principales
-                        </h3>
-                    </div>
+                    <!-- Left & Middle: Form Sections -->
+                    <div class="lg:col-span-2 space-y-6">
 
-                    <!-- Name Input -->
-                    <div class="group relative">
-                        <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5 block ml-1">
-                            Nombre del producto <span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i
-                                    class='bx bx-tag text-gray-400 text-lg group-focus-within:text-primary transition-colors'></i>
-                            </div>
-                            <input type="text" name="name" required placeholder="Ej. Coca Cola 3L Original"
-                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium text-gray-800 placeholder-gray-400 shadow-sm">
-                        </div>
-                    </div>
+                        <!-- Section 1: Detalles Principales -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-primary pb-3 border-b border-gray-200">
+                                📋 Detalles Principales
+                            </h3>
 
-                    <!-- SKU & Category Grid -->
-                    <div class="grid grid-cols-2 gap-5">
-                        <!-- SKU Input -->
-                        <div class="group relative">
-                            <label
-                                class="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5 block ml-1">
-                                Código / SKU <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i
-                                        class='bx bx-barcode text-gray-400 text-lg group-focus-within:text-primary transition-colors'></i>
-                                </div>
-                                <input type="text" name="sku" required placeholder="SKU-001"
-                                    class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-mono text-gray-700 shadow-sm uppercase">
-                            </div>
-                        </div>
-
-                        <!-- Category Input -->
-                        <div class="group relative">
-                            <label
-                                class="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5 block ml-1">
-                                Categoría <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i
-                                        class='bx bx-category text-gray-400 text-lg group-focus-within:text-primary transition-colors'></i>
-                                </div>
-                                <select name="category_id" id="categorySelect" required
-                                    class="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm appearance-none cursor-pointer text-gray-700 font-medium shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                </select>
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <i class='bx bx-chevron-down text-gray-400 font-bold'></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column: Pricing & Stock -->
-                <div class="md:col-span-5">
-                    <div
-                        class="bg-gray-50 rounded-xl p-5 border border-gray-200 h-full flex flex-col shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
-                        <h3
-                            class="text-xs font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200 pb-3 mb-4 flex items-center gap-2">
-                            <i class='bx bxs-component text-primary'></i> Inventario & Precios
-                        </h3>
-
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-5 flex-grow content-start">
-                            <!-- Sale Price -->
-                            <div class="col-span-2 sm:col-span-1 group">
-                                <label class="text-xs font-bold text-primary uppercase tracking-wide mb-1.5 block ml-1">
-                                    Precio Venta
+                            <!-- Name -->
+                            <div class="group relative">
+                                <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5 block">
+                                    Nombre del Producto <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
-                                    <span
-                                        class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-xs">Bs</span>
-                                    <input type="number" step="0.01" min="0" name="price" required onchange="calculateMargin()"
-                                        placeholder="0.00"
-                                        class="w-full pl-8 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold text-gray-900 text-right shadow-sm placeholder-gray-300">
+                                    <i class='bx bx-tag absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'></i>
+                                    <input type="text" name="name" required placeholder="Ej. Coca Cola 3L Original"
+                                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium text-gray-800 placeholder-gray-400 shadow-sm"
+                                        oninput="updateProductPreview()">
+                                    <div class="validation-message text-xs mt-1"></div>
                                 </div>
                             </div>
 
-                            <!-- Cost Price -->
-                            <div class="col-span-2 sm:col-span-1 group">
-                                <label
-                                    class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 block ml-1">
-                                    Costo Unitario
-                                </label>
-                                <div class="relative">
-                                    <span
-                                        class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">Bs</span>
-                                    <input type="number" step="0.01" min="0" name="cost_price" required
-                                        onchange="calculateMargin()" placeholder="0.00"
-                                        class="w-full pl-8 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium text-gray-600 text-right shadow-sm">
-                                </div>
-                            </div>
-
-                            <!-- Stock Initial -->
-                            <div class="col-span-2 mt-auto pt-4 border-t border-gray-200">
+                            <!-- SKU & Category -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- SKU -->
                                 <div class="group relative">
-                                    <label
-                                        class="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 block ml-1">
-                                        0
+                                    <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5 block">
+                                        Código / SKU <span class="text-red-500">*</span>
                                     </label>
                                     <div class="relative">
-                                        <div
-                                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                                            <i class='bx bx-box text-gray-400 text-sm'></i>
-                                        </div>
-                                        <input type="number" name="stock_quantity" required placeholder="0"
-                                            class="w-full pl-9 pr-16 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold text-gray-800 shadow-sm relative z-0">
-                                        <div
-                                            class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none z-10">
-                                            <span class="text-xs font-medium text-gray-400">unidades</span>
-                                        </div>
+                                        <i class='bx bx-barcode absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'></i>
+                                        <input type="text" name="sku" required placeholder="SKU-001"
+                                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-mono text-gray-700 shadow-sm uppercase"
+                                            onchange="validateSKU(this.value)">
+                                        <div class="validation-message text-xs mt-1"></div>
                                     </div>
                                 </div>
+
+                                <!-- Category -->
+                                <div class="group relative">
+                                    <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5 block">
+                                        Categoría <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <i class='bx bx-category absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'></i>
+                                        <select name="category_id" id="categorySelect" required
+                                            class="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm appearance-none cursor-pointer text-gray-700 font-medium shadow-sm"
+                                            onchange="updateProductPreview()">
+                                            <option value="">Seleccionar...</option>
+                                        </select>
+                                        <i class='bx bx-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Precios e Inventario -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-primary pb-3 border-b border-gray-200">
+                                💰 Precios e Inventario
+                            </h3>
+
+                            <!-- Prices Grid -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Sale Price -->
+                                <div class="group">
+                                    <label class="text-xs font-bold text-primary uppercase tracking-wide mb-1.5 block">
+                                        Precio de Venta <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-xs">Bs</span>
+                                        <input type="number" step="0.01" min="0" name="price" required placeholder="0.00"
+                                            class="w-full pl-8 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold text-gray-900 text-right shadow-sm"
+                                            onchange="calculateMargin()" oninput="updateProductPreview()">
+                                    </div>
+                                </div>
+
+                                <!-- Cost Price -->
+                                <div class="group">
+                                    <label class="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 block">
+                                        Costo Unitario <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">Bs</span>
+                                        <input type="number" step="0.01" min="0" name="cost_price" required placeholder="0.00"
+                                            class="w-full pl-8 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium text-gray-600 text-right shadow-sm"
+                                            onchange="calculateMargin()" oninput="updateProductPreview()">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Margin Display -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <p class="text-xs text-gray-600 mb-1">Margen de Ganancia</p>
+                                <div class="flex justify-between items-end">
+                                    <p id="marginPercent" class="text-2xl font-bold text-blue-600">0%</p>
+                                    <p id="marginLabel" class="text-xs text-gray-500">Aceptable</p>
+                                </div>
+                            </div>
+
+                            <!-- Stock -->
+                            <div class="group">
+                                <label class="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 block">
+                                    Stock Inicial <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <i class='bx bx-box absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'></i>
+                                    <input type="number" name="stock_quantity" required placeholder="0" min="0"
+                                        class="w-full pl-10 pr-16 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold text-gray-800 shadow-sm text-right"
+                                        onchange="updateProductPreview()">
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-400">unidades</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Preview -->
+                    <div class="lg:col-span-1">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-primary pb-3 border-b border-gray-200 mb-4">
+                            👁️ Vista Previa
+                        </h3>
+                        <div id="productPreview" class="bg-gradient-to-br from-primary to-blue-600 text-white p-6 rounded-xl shadow-lg sticky top-6">
+                            <div class="text-center mb-6">
+                                <div class="w-16 h-16 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-3">
+                                    <i class='bx bx-package text-3xl'></i>
+                                </div>
+                                <h4 id="previewName" class="font-bold text-lg">Producto Sin Nombre</h4>
+                                <p id="previewSKU" class="text-xs text-blue-100 mt-1">SKU-000</p>
+                            </div>
+
+                            <div class="space-y-3 border-t border-white/30 pt-4">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-blue-100">Categoría</span>
+                                    <span id="previewCategory" class="font-semibold">-</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-blue-100">Precio Venta</span>
+                                    <span id="previewPrice" class="font-bold">Bs 0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-blue-100">Costo</span>
+                                    <span id="previewCost" class="font-semibold">Bs 0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm font-bold border-t border-white/30 pt-3">
+                                    <span>Margen</span>
+                                    <span id="previewMargin" class="text-green-200">0%</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-blue-100">Stock</span>
+                                    <span id="previewStock" class="font-bold">0 unidades</span>
+                                </div>
+                            </div>
+
+                            <div id="previewStatus" class="mt-6 pt-4 border-t border-white/30 text-center text-sm font-semibold">
+                                🟡 Completa los campos
                             </div>
                         </div>
                     </div>
@@ -272,6 +306,7 @@
 
         if (product) {
             title.textContent = 'Editar Producto';
+            title.parentElement.querySelector('p').textContent = 'Modifica los datos del producto';
             form.id.value = product.id;
             form.name.value = product.name;
             form.sku.value = product.sku;
@@ -281,10 +316,12 @@
             form.stock_quantity.value = product.stock_quantity;
         } else {
             title.textContent = 'Nuevo Producto';
+            title.parentElement.querySelector('p').textContent = 'Completa todos los campos requeridos';
             form.reset();
             form.id.value = '';
         }
         calculateMargin();
+        updateProductPreview();
     }
 
     function closeModal() {
@@ -297,9 +334,95 @@
     }
 
     function calculateMargin() {
-        // Margin calculation logic kept for internal use if needed, but UI removed
         const cost = parseFloat(form.cost_price.value) || 0;
         const price = parseFloat(form.price.value) || 0;
+
+        let margin = 0;
+        if (price > 0) {
+            margin = ((price - cost) / price) * 100;
+        }
+
+        // Update margin display
+        const marginPercent = document.getElementById('marginPercent');
+        const marginLabel = document.getElementById('marginLabel');
+
+        if (marginPercent) {
+            marginPercent.textContent = Math.max(0, margin).toFixed(1) + '%';
+        }
+
+        if (marginLabel) {
+            if (margin < 20) {
+                marginLabel.textContent = '⚠️ Muy Bajo';
+                marginLabel.className = 'text-xs text-red-600';
+            } else if (margin < 30) {
+                marginLabel.textContent = '✓ Aceptable';
+                marginLabel.className = 'text-xs text-yellow-600';
+            } else {
+                marginLabel.textContent = '✓ Bueno';
+                marginLabel.className = 'text-xs text-green-600';
+            }
+        }
+
+        updateProductPreview();
+    }
+
+    function updateProductPreview() {
+        const name = form.name.value || 'Producto Sin Nombre';
+        const sku = form.sku.value || 'SKU-000';
+        const categoryId = form.category_id.value;
+        const category = categoryId ? allCategories.find(c => c.id == categoryId)?.name : '-';
+        const price = parseFloat(form.price.value) || 0;
+        const cost = parseFloat(form.cost_price.value) || 0;
+        const stock = parseInt(form.stock_quantity.value) || 0;
+
+        let margin = 0;
+        if (price > 0) {
+            margin = ((price - cost) / price) * 100;
+        }
+
+        // Update preview elements
+        document.getElementById('previewName').textContent = name;
+        document.getElementById('previewSKU').textContent = sku;
+        document.getElementById('previewCategory').textContent = category;
+        document.getElementById('previewPrice').textContent = formatCurrency(price);
+        document.getElementById('previewCost').textContent = formatCurrency(cost);
+        document.getElementById('previewMargin').textContent = Math.max(0, margin).toFixed(1) + '%';
+        document.getElementById('previewStock').textContent = stock + ' unidades';
+
+        // Update status
+        const statusEl = document.getElementById('previewStatus');
+        if (name && sku && categoryId && price > 0 && stock >= 0) {
+            statusEl.innerHTML = '🟢 Listo para guardar';
+            statusEl.className = 'mt-6 pt-4 border-t border-white/30 text-center text-sm font-semibold text-green-200';
+        } else {
+            statusEl.innerHTML = '🟡 Completa los campos';
+            statusEl.className = 'mt-6 pt-4 border-t border-white/30 text-center text-sm font-semibold text-yellow-200';
+        }
+    }
+
+    async function validateSKU(value) {
+        const skuInput = form.sku;
+        const validationMsg = skuInput.parentElement.querySelector('.validation-message');
+
+        if (!value) {
+            validationMsg.innerHTML = '';
+            return;
+        }
+
+        // Check if SKU exists in current products
+        const exists = allProducts.find(p => p.sku.toUpperCase() === value.toUpperCase() && p.id != form.id.value);
+
+        if (exists) {
+            validationMsg.innerHTML = `⚠️ Este SKU ya existe <a href="#" onclick="event.preventDefault(); editProduct(${JSON.stringify(exists).replace(/"/g, '&quot;')})" class="underline">Ver producto</a>`;
+            validationMsg.className = 'validation-message text-xs mt-1 text-yellow-600';
+            skuInput.classList.add('border-yellow-400');
+        } else {
+            validationMsg.innerHTML = '✓ SKU disponible';
+            validationMsg.className = 'validation-message text-xs mt-1 text-green-600';
+            skuInput.classList.remove('border-yellow-400');
+        }
+
+        updateProductPreview();
     }
 
     async function loadData() {

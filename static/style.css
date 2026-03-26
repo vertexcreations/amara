@@ -2222,4 +2222,91 @@ th {
 .btn-qty:hover {
     background: var(--primary-color);
     color: white;
+}    box-shadow: var(--shadow-md);
+}
+
+/* ====== Form Validation Messages ====== */
+.validation-message {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    padding: 0 0.5rem;
+    min-height: 1.2rem;
+    display: block;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.validation-message.success {
+    color: #10b981;
+}
+
+.validation-message.warning {
+    color: #f59e0b;
+}
+
+.validation-message.error {
+    color: #ef4444;
+}
+
+.validation-message a {
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* Input with error state */
+input.error,
+select.error {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+}
+
+input.warning,
+select.warning {
+    border-color: #f59e0b;
+    background-color: #fefce8;
+}
+
+input.success,
+select.success {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+}
+
+/* Product Preview Card */
+.preview-card {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+/* Edit Modal Items */
+.edit-item-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.edit-item-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #6366f1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .validation-message {
+        font-size: 0.7rem;
+    }
+
+    .edit-item-card {
+        padding: 0.75rem;
+    }
+
+    .preview-card {
+        padding: 1rem;
+    }
 }
