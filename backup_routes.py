@@ -32,25 +32,24 @@ def sanitize_filename(filename):
         raise ValueError("Invalid filename")
     return safe_name
 
+def get_data_dir():
+    """Returns the same stable data directory as app.py."""
+    if getattr(sys, 'frozen', False):
+        base = os.environ.get('APPDATA', os.path.expanduser('~'))
+        data_dir = os.path.join(base, 'MiTiendaPoS')
+    else:
+        data_dir = os.path.join(os.getcwd(), 'instance')
+    os.makedirs(data_dir, exist_ok=True)
+    return data_dir
+
 def get_db_path():
     """Returns the absolute path to the database file."""
-    # From app.py logic
-    if getattr(sys, 'frozen', False):
-        application_path = os.path.dirname(sys.executable)
-        return os.path.join(application_path, 'pos.db')
-    else:
-        return os.path.join(os.getcwd(), 'instance', 'pos.db')
+    return os.path.join(get_data_dir(), 'pos.db')
 
 def get_backup_dir():
     """Returns the backup directory path, creating it if needed."""
-    if getattr(sys, 'frozen', False):
-        base_path = os.path.dirname(sys.executable)
-    else:
-        base_path = os.getcwd()
-    
-    backup_path = os.path.join(base_path, 'backups')
-    if not os.path.exists(backup_path):
-        os.makedirs(backup_path)
+    backup_path = os.path.join(get_data_dir(), 'backups')
+    os.makedirs(backup_path, exist_ok=True)
     return backup_path
 
 @backup_bp.route('/')

@@ -4,14 +4,23 @@ import os
 
 import sys
 
+def get_data_dir():
+    """Returns a stable data directory regardless of where the .exe is located."""
+    if getattr(sys, 'frozen', False):
+        # Use %APPDATA%\MiTiendaPoS so data persists even if .exe is moved
+        base = os.environ.get('APPDATA', os.path.expanduser('~'))
+        data_dir = os.path.join(base, 'MiTiendaPoS')
+    else:
+        data_dir = os.path.join(os.getcwd(), 'instance')
+    os.makedirs(data_dir, exist_ok=True)
+    return data_dir
+
 def create_app():
     if getattr(sys, 'frozen', False):
         template_folder = os.path.join(sys._MEIPASS, 'templates')
         static_folder = os.path.join(sys._MEIPASS, 'static')
         app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
-        # Configurar ruta de base de datos para ejecutable (junto al .exe)
-        application_path = os.path.dirname(sys.executable)
-        db_path = os.path.join(application_path, 'pos.db')
+        db_path = os.path.join(get_data_dir(), 'pos.db')
         app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     else:
         app = Flask(__name__)
