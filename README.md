@@ -1,4 +1,4 @@
-# Mi Tienda PoS
+# Vestra
 
 Sistema de Punto de Venta (PoS) simple y moderno para gestión de inventario y ventas, desarrollado en Python con Flask.
 
@@ -22,7 +22,7 @@ Abre tu terminal o línea de comandos y ejecuta:
 
 ```bash
 git clone <URL_DEL_REPOSITORIO>
-cd AppPoS
+cd Vestra
 ```
 *(Reemplaza `<URL_DEL_REPOSITORIO>` con la URL real de tu repositorio Git)*
 
@@ -83,7 +83,7 @@ Si deseas distribuir la aplicación como un archivo ejecutable único (sin neces
 1.  Busca el archivo **`crear_ejecutable.bat`**.
 2.  Haz doble clic sobre él.
 3.  El script instalará `pyinstaller` y generará el archivo `.exe`.
-4.  Al finalizar, encontrarás el ejecutable en la carpeta **`dist/MiTiendaPoS.exe`**.
+4.  Al finalizar, encontrarás el ejecutable en la carpeta **`dist/Vestra.exe`**.
 
 ### Opción B: Manualmente
 
@@ -95,10 +95,10 @@ Si deseas distribuir la aplicación como un archivo ejecutable único (sin neces
 3.  Ejecuta el comando de compilación:
     ```bash
     # En Windows (usa ; como separador)
-    pyinstaller --noconsole --onefile --name "MiTiendaPoS" --add-data "templates;templates" --add-data "static;static" desktop_app.py
+    pyinstaller --noconsole --onefile --name "Vestra" --add-data "templates;templates" --add-data "static;static" desktop_app.py
 
     # En Linux/Mac (usa : como separador)
-    pyinstaller --noconsole --onefile --name "MiTiendaPoS" --add-data "templates:templates" --add-data "static:static" desktop_app.py
+    pyinstaller --noconsole --onefile --name "Vestra" --add-data "templates:templates" --add-data "static:static" desktop_app.py
     ```
 4.  El archivo generado estará en la carpeta `dist/`.
 

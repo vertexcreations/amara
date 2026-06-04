@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Tienda PoS</title>
+    <title>Vestra</title>
+    <link rel="icon" href="{{ url_for('static', filename='icon.ico') }}" type="image/x-icon">
     <!-- Local Fonts and Icons -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}?v={{ range(1, 10000) | random }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/boxicons/css/boxicons.min.css') }}?v={{ range(1, 10000) | random }}">
@@ -36,8 +37,14 @@
             <li><a href="/categories" class="{{ 'active' if request.path == '/categories' else '' }}">
                     <i class='bx bxs-category'></i> Categorías
                 </a></li>
+            <li><a href="/merchandise" class="{{ 'active' if request.path == '/merchandise' else '' }}">
+                    <i class='bx bxs-package'></i> Mercadería
+                </a></li>
             <li><a href="/sales" class="{{ 'active' if request.path == '/sales' else '' }}">
                     <i class='bx bxs-report'></i> Historial
+                </a></li>
+            <li><a href="/reports" class="{{ 'active' if request.path == '/reports' else '' }}">
+                    <i class='bx bx-chart'></i> Reportes
                 </a></li>
             <li><a href="/backups" class="{{ 'active' if request.path.startswith('/backups') else '' }}">
                     <i class='bx bxs-data'></i> Respaldos

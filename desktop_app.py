@@ -22,6 +22,15 @@ APP_PORT = get_free_port()
 def start_server():
     # Ejecutar Flask en un hilo separado
     # use_reloader=False es importante para que no intente reiniciar en el hilo
+
+    # Log de endpoints registrados
+    print(f"[INFO] Servidor iniciado en http://127.0.0.1:{APP_PORT}")
+    print(f"[INFO] Endpoints registrados:")
+    for rule in app.url_map.iter_rules():
+        if '/api/' in rule.rule:
+            methods = ','.join(rule.methods - {'HEAD', 'OPTIONS'})
+            print(f"  {methods:6} {rule.rule}")
+
     app.run(host='127.0.0.1', port=APP_PORT, use_reloader=False)
 
 class Api:
@@ -81,7 +90,7 @@ if __name__ == '__main__':
     from ctypes.wintypes import HANDLE, LPCWSTR, DWORD
     kernel32 = ctypes.windll.kernel32
     # Crear un Mutex global
-    mutex = kernel32.CreateMutexW(None, False, "MiTiendaPoS_SingleInstance_Mutex")
+    mutex = kernel32.CreateMutexW(None, False, "Vestra_SingleInstance_Mutex")
     if kernel32.GetLastError() == 183: # ERROR_ALREADY_EXISTS
         ctypes.windll.user32.MessageBoxW(0, "La aplicación ya se encuentra abierta.", "Error", 0x10)
         sys.exit(0)
@@ -90,7 +99,7 @@ if __name__ == '__main__':
     if getattr(sys, 'frozen', False):
         try:
             base = os.environ.get('APPDATA', os.path.expanduser('~'))
-            log_dir = os.path.join(base, 'MiTiendaPoS')
+            log_dir = os.path.join(base, 'Vestra')
             os.makedirs(log_dir, exist_ok=True)
             log_file = open(os.path.join(log_dir, 'app.log'), 'a', encoding='utf-8')
             sys.stdout = log_file
@@ -116,7 +125,7 @@ if __name__ == '__main__':
 
     # Iniciar la ventana nativa
     webview.create_window(
-        'Mi Tienda PoS', 
+        'Vestra',
         f'http://127.0.0.1:{APP_PORT}',
         js_api=api,
         width=1200,

@@ -1,57 +1,63 @@
 @echo off
-title Creando Ejecutable (EXE)...
-echo ===================================================
-echo      Creando Aplicacion de Escritorio (.exe)
-echo ===================================================
+REM Crear ejecutable con PyInstaller
+REM Este script compila la aplicación Flask en un ejecutable Windows
+
+echo.
+echo ========================================
+echo Compilando Vestra en archivo .exe
+echo ========================================
 echo.
 
-:: 1. Verificar entorno virtual
-if not exist ".venv311" (
-    echo [INFO] Creando entorno virtual...
-    py -3.11 -m venv .venv311
+REM Verificar si existe el virtual environment
+if not exist ".venv" (
+    echo Error: Virtual environment no encontrado
+    echo Por favor ejecuta: python -m venv .venv
+    pause
+    exit /b 1
 )
-call .venv311\Scripts\activate
 
-:: 2. Instalar dependencias
-echo [INFO] Instalando librerias necesarias (esto puede tardar)...
-pip install -r requirements.txt >nul
-pip install pyinstaller pywebview >nul
+REM Activar virtual environment
+call .venv\Scripts\activate.bat
 
-:: 3. Limpiar builds anteriores
-if exist "build" rmdir /s /q "build"
-if exist "dist" rmdir /s /q "dist"
-if exist "MiTiendaPoS.spec" del "MiTiendaPoS.spec"
+REM Verificar si PyInstaller está instalado
+pip show pyinstaller >nul 2>&1
+if errorlevel 1 (
+    echo Instalando PyInstaller...
+    pip install pyinstaller
+)
 
-:: 4. Crear el ejecutable
+REM Crear directorio dist si no existe
+if not exist "dist" mkdir dist
+
+REM Compilar con PyInstaller
 echo.
-echo [INFO] Generando el archivo .exe...
-echo Por favor espere, esto puede tomar unos minutos.
+echo Compilando aplicación...
 echo.
 
-pyinstaller --noconsole --onefile ^
-    --name "MiTiendaPoS" ^
-    --icon "static/icon.ico" ^
-    --add-data "templates;templates" ^
-    --add-data "static;static" ^
+pyinstaller --onefile ^
+    --windowed ^
+    --name "Vestra" ^
+    --icon=icon.ico ^
+    --add-data "templates:templates" ^
+    --add-data "static:static" ^
+    --hidden-import=flask ^
+    --hidden-import=flask_sqlalchemy ^
+    --hidden-import=werkzeug ^
     desktop_app.py
 
-:: Nota: Si no tienes favicon.ico, pyinstaller mostrará una advertencia pero continuará. 
-:: Puedes quitar la linea --icon si falla.
-
-echo.
-echo ===================================================
-echo      PROCESO TERMINADO
-echo ===================================================
-echo.
-if exist "dist\MiTiendaPoS.exe" (
-    echo [EXITO] El ejecutable se creo correctamente.
-    echo Lo encontraras en la carpeta: dist\MiTiendaPoS.exe
+if errorlevel 1 (
     echo.
-    echo Puedes copiar ese archivo unico a cualquier computadora
-    echo y funcionara sin instalar nada mas.
-) else (
-    echo [ERROR] Algo salio mal. Revisa los mensajes de arriba.
+    echo Error durante la compilación
+    pause
+    exit /b 1
 )
-echo.
-pause
 
+echo.
+echo ========================================
+echo Compilación completada exitosamente
+echo.
+echo Ejecutable creado en: dist\Vestra.exe
+echo ========================================
+echo.
+
+pause
