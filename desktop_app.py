@@ -33,25 +33,48 @@ def start_server():
 
     app.run(host='127.0.0.1', port=APP_PORT, use_reloader=False)
 
+def on_closing():
+    """Handle application closing - save data before exit."""
+    print("[INFO] Iniciando cierre de aplicación...")
+    try:
+        from app import db
+        db.session.commit()
+        db.session.remove()
+        db.engine.dispose()
+        print("[INFO] Base de datos guardada y conexiones cerradas")
+    except Exception as e:
+        print(f"[ERROR] Error al guardar datos: {e}")
+
+    # Liberar el mutex
+    try:
+        global __mutex_handle
+        if __mutex_handle:
+            kernel32 = ctypes.windll.kernel32
+            kernel32.ReleaseMutex(__mutex_handle)
+            kernel32.CloseHandle(__mutex_handle)
+            print("[INFO] Mutex liberado")
+    except Exception as e:
+        print(f"[ERROR] Error al liberar mutex: {e}")
+
 class Api:
     def save_backup_dialog(self, filename):
         import shutil
         import os
         from backup_routes import get_backup_dir
-        
+
         # Obtener ventana activa
         window = webview.windows[0]
-        
+
         # Mostrar diálogo de guardado
         result = window.create_file_dialog(
-            webview.SAVE_DIALOG, 
+            webview.SAVE_DIALOG,
             save_filename=filename
         )
-        
+
         if result and len(result) > 0:
             target_path = result[0]
             source_path = os.path.join(get_backup_dir(), filename)
-            
+
             try:
                 shutil.copy2(source_path, target_path)
                 return {'success': True}
@@ -61,24 +84,42 @@ class Api:
 
     def close_app(self):
         """Gracefully close the application with proper cleanup."""
+        print("[INFO] Solicitud de cierre desde interfaz")
+
         try:
-            # Dispose database connections gracefully
+            # Save any pending changes and dispose database connections gracefully
             from app import db
+            print("[INFO] Guardando cambios en base de datos...")
+            db.session.commit()
             db.session.remove()
             db.engine.dispose()
+            print("[INFO] Base de datos guardada correctamente")
         except Exception as e:
-            print(f"Error disposing database: {e}")
+            print(f"[ERROR] Error al guardar BD: {e}")
 
         try:
             # Close webview window
             if webview.windows:
+                print("[INFO] Cerrando ventana...")
                 webview.windows[0].destroy()
         except Exception as e:
-            print(f"Error closing window: {e}")
+            print(f"[ERROR] Error al cerrar ventana: {e}")
 
         # Graceful exit after cleanup
         def graceful_exit():
-            time.sleep(0.5)
+            try:
+                # Liberar mutex
+                global __mutex_handle
+                if __mutex_handle:
+                    kernel32 = ctypes.windll.kernel32
+                    kernel32.ReleaseMutex(__mutex_handle)
+                    kernel32.CloseHandle(__mutex_handle)
+                    print("[INFO] Mutex liberado")
+            except Exception as e:
+                print(f"[ERROR] Error al liberar mutex: {e}")
+
+            time.sleep(0.3)
+            print("[INFO] Saliendo de aplicación...")
             os._exit(0)
 
         t = threading.Thread(target=graceful_exit, daemon=True)
@@ -89,17 +130,24 @@ if __name__ == '__main__':
     # Usar un Mutex de Windows para asegurar que solo haya una instancia abierta
     from ctypes.wintypes import HANDLE, LPCWSTR, DWORD
     kernel32 = ctypes.windll.kernel32
-    # Crear un Mutex global
-    mutex = kernel32.CreateMutexW(None, False, "Vestra_SingleInstance_Mutex")
-    if kernel32.GetLastError() == 183: # ERROR_ALREADY_EXISTS
-        ctypes.windll.user32.MessageBoxW(0, "La aplicación ya se encuentra abierta.", "Error", 0x10)
-        sys.exit(0)
+    user32 = ctypes.windll.user32
+
+    # Crear un Mutex global con nombre único
+    mutex_name = "amara_SingleInstance_Mutex_2026"
+    mutex = kernel32.CreateMutexW(None, True, mutex_name)
+
+    if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+        user32.MessageBoxW(0, "La aplicación amara ya se encuentra abierta.\n\nCierre la instancia actual antes de abrir una nueva.", "Aplicación en ejecución", 0x30)
+        sys.exit(1)
+
+    # Mantener referencia al mutex para evitar que se libere
+    __mutex_handle = mutex
 
     # Configurar logging para modo "congelado" (exe) evitando crashes por consola
     if getattr(sys, 'frozen', False):
         try:
             base = os.environ.get('APPDATA', os.path.expanduser('~'))
-            log_dir = os.path.join(base, 'Vestra')
+            log_dir = os.path.join(base, 'Amara')
             os.makedirs(log_dir, exist_ok=True)
             log_file = open(os.path.join(log_dir, 'app.log'), 'a', encoding='utf-8')
             sys.stdout = log_file
@@ -124,8 +172,8 @@ if __name__ == '__main__':
     api = Api()
 
     # Iniciar la ventana nativa
-    webview.create_window(
-        'Vestra',
+    window = webview.create_window(
+        'Amara',
         f'http://127.0.0.1:{APP_PORT}',
         js_api=api,
         width=1200,
@@ -133,5 +181,8 @@ if __name__ == '__main__':
         resizable=True,
         min_size=(800, 600)
     )
-    
+
+    # Registrar handler para cierre de ventana
+    window.events.closing += on_closing
+
     webview.start(icon=icon_path)

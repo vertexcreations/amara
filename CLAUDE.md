@@ -1,6 +1,6 @@
 # Vestra - Estado del Proyecto
 
-## 📍 Dónde estamos (28 de Mayo, 2026)
+## 📍 Dónde estamos (8 de Junio, 2026 - Distribución Lista)
 
 ### Módulos Implementados ✅
 
@@ -123,4 +123,24 @@
 
 ---
 
-**Última actualización**: 28/05/2026 - Agregadas columnas Inversión/Ganancia/Retorno a Tab Items
+---
+
+## 🚀 Distribución Compilada (8 de Junio, 2026)
+
+**Archivo ejecutable:** `dist/amara.exe` (20.51 MB)
+
+### Cambios en esta sesión:
+- ✅ Corrección de evento de cierre: Ahora guarda datos al cerrar con "X"
+- ✅ Mejora en script de compilación: Validaciones robustas y limpieza automática
+- ✅ Botón "Cerrar" mejorado visualmente (más grande, mejor legibilidad)
+- ✅ Compilación exitosa de amara.exe
+
+### Características de la distribución:
+- **Autónoma**: No requiere Python instalado
+- **BD automática**: Crea SQLite en `%APPDATA%\MiTiendaPoS\` (datos persisten)
+- **Guardado seguro**: Commit de BD al cerrar (botón o X)
+- **Datos locales**: No requiere conexión a internet
+
+---
+
+**Última actualización**: 08/06/2026 - amara.exe compilado y listo para distribución
