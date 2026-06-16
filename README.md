@@ -112,9 +112,64 @@ Si deseas distribuir la aplicación como un archivo ejecutable único (sin neces
 *   `instance/`: Contiene la base de datos SQLite (`pos.db`).
 *   `iniciar_sistema.bat`: Script de automatización para Windows.
 
+## Testing
+
+El proyecto incluye tests unitarios y de integración usando `pytest`. Para ejecutar las pruebas:
+
+```bash
+# Instalar dependencias de desarrollo
+pip install -r requirements-dev.txt
+
+# Ejecutar todos los tests
+pytest tests/ -v
+
+# Ejecutar con reporte de cobertura
+pytest tests/ --cov=. --cov-report=term-missing
+```
+
+Tests disponibles:
+- `tests/test_models.py` - Tests de modelos de base de datos
+- `tests/test_routes.py` - Tests de rutas y API
+
+## CI/CD - GitHub Actions
+
+Este proyecto está configurado con GitHub Actions para ejecutar tests automáticamente en cada push y pull request a la rama `main`.
+
+### Workflow
+
+El archivo `.github/workflows/ci.yml` define:
+- **Trigger**: Push a `main` o PR hacia `main`
+- **Environment**: Ubuntu Latest + Python 3.11
+- **Steps**:
+  1. Checkout del código
+  2. Setup de Python 3.11
+  3. Instalación de dependencias (requirements.txt + requirements-dev.txt)
+  4. Ejecución de tests con pytest
+  5. Generación de reporte de cobertura (opcional)
+
+### Para ver el estado de los builds
+
+Dirígete a [GitHub Actions](https://github.com/vertexcreations/amara/actions) para ver:
+- Estado de los últimos builds
+- Logs detallados de ejecución
+- Reportes de cobertura
+
+### Ambiente de Distribución
+
+El binario `.exe` se compila localmente en Windows usando:
+```bash
+python build_exe.py
+```
+
+Output: `dist/amara.exe` (excluido de git mediante `.gitignore`)
+
+Para futuras releases automáticas, se puede agregar un workflow adicional que compile en `windows-latest` runner y publique en GitHub Releases.
+
 ## Tecnologías
 
 *   **Backend**: Python, Flask, SQLAlchemy.
 *   **Frontend**: HTML5, CSS3 (Vanilla), JavaScript.
 *   **Base de Datos**: SQLite.
+*   **Testing**: pytest, pytest-flask.
+*   **CI/CD**: GitHub Actions.
 
